@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Car Game</title>
+
+<style>
+body{
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:Arial;
+}
+
+#ui{
+position:absolute;
+top:20px;
+left:20px;
+font-size:24px;
+}
+
+#gameOver{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+display:none;
+text-align:center;
+}
+
+button{
+padding:10px 20px;
+font-size:20px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="ui">
+Score: <span id="score">0</span><br>
+Lives: <span id="lives">5</span>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="gameOver">
+<h1>GAME OVER</h1>
+<p>Final Score: <span id="finalScore"></span></p>
+<button onclick="restartGame()">Restart</button>
+</div>
+
+<script>
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let score = 0;
+let lives = 5;
+let gameActive = true;
+
+const car = {
+x: canvas.width/2,
+y: canvas.height-120,
+width:40,
+height:60,
+speed:6
+};
+
+let obstacles=[];
+
+/* MORE OBSTACLES */
+function spawnObstacle(){
+
+for(let i=0;i<3;i++){
+
+obstacles.push({
+x:Math.random()*(canvas.width-40),
+y:-50,
+width:40,
+height:20
+});
+
+}
+
+}
+
+/* FASTER SPAWN */
+setInterval(spawnObstacle,400);
+
+const keys={};
+
+window.addEventListener("keydown",e=>{
+keys[e.key]=true;
+});
+
+window.addEventListener("keyup",e=>{
+keys[e.key]=false;
+});
+
+function playerControl(){
+
+if(keys["ArrowLeft"]) car.x -= car.speed;
+
+if(keys["ArrowRight"]) car.x += car.speed;
+
+if(keys["ArrowUp"]) car.y -= car.speed;
+
+if(keys["ArrowDown"]) car.y += car.speed;
+
+/* BOUNDARY CONTROL */
+
+if(car.x < 0) car.x = 0;
+
+if(car.x + car.width > canvas.width)
+car.x = canvas.width - car.width;
+
+if(car.y < 0) car.y = 0;
+
+if(car.y + car.height > canvas.height)
+car.y = canvas.height - car.height;
+
+}
+
+function updateObstacles(){
+
+obstacles.forEach((obs,index)=>{
+
+obs.y += 7;
+
+if(obs.y > canvas.height){
+
+obstacles.splice(index,1);
+
+score += 10;
+
+document.getElementById("score").innerText = score;
+
+}
+
+});
+
+}
+
+function drawObstacles(){
+
+ctx.fillStyle="yellow";
+
+obstacles.forEach(obs=>{
+ctx.fillRect(obs.x,obs.y,obs.width,obs.height);
+});
+
+}
+
+function drawCar(){
+
+ctx.fillStyle="red";
+
+ctx.fillRect(car.x,car.y,car.width,car.height);
+
+}
+
+function checkCollision(){
+
+obstacles.forEach((obs,index)=>{
+
+if(
+car.x < obs.x + obs.width &&
+car.x + car.width > obs.x &&
+car.y < obs.y + obs.height &&
+car.y + car.height > obs.y
+){
+
+lives--;
+
+document.getElementById("lives").innerText = lives;
+
+obstacles.splice(index,1);
+
+if(lives <= 0){
+
+gameActive = false;
+
+document.getElementById("finalScore").innerText = score;
+
+document.getElementById("gameOver").style.display = "block";
+
+}
+
+}
+
+});
+
+}
+
+function gameLoop(){
+
+if(!gameActive) return;
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+playerControl();
+
+updateObstacles();
+
+checkCollision();
+
+drawCar();
+
+drawObstacles();
+
+requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
+
+function restartGame(){
+
+location.reload();
+
+}
+
+</script>
+
+</body>
+</html>
+

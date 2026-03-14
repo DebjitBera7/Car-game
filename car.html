@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Car Game</title>
+
+<style>
+body{
+margin:0;
+overflow:hidden;
+background:black;
+}
+</style>
+
+</head>
+
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+
+// CAR
+const car = {
+x: canvas.width/2,
+y: canvas.height-120,
+width:40,
+height:60,
+speed:4
+};
+
+
+// OBSTACLES
+let obstacles=[];
+
+
+// MORE OBSTACLES SPAWN
+function spawnObstacle(){
+
+for(let i=0;i<3;i++){
+
+obstacles.push({
+x: Math.random()*(canvas.width-40),
+y: -50,
+width:40,
+height:20
+});
+
+}
+
+}
+
+
+// FAST SPAWN
+setInterval(spawnObstacle,500);
+
+
+// AI DRIVE
+function aiDrive(){
+
+let moveLeft=false;
+let moveRight=false;
+
+obstacles.forEach(obs=>{
+
+let verticalDistance = car.y - obs.y;
+let horizontalDistance = Math.abs(car.x - obs.x);
+
+if(verticalDistance>0 && verticalDistance<120){
+
+if(horizontalDistance < car.width){
+
+if(obs.x < car.x){
+moveRight=true;
+}else{
+moveLeft=true;
+}
+
+}
+
+}
+
+});
+
+if(moveLeft){
+car.x -= car.speed;
+}
+
+if(moveRight){
+car.x += car.speed;
+}
+
+
+// BOUNDARY
+if(car.x < 0){
+car.x = 0;
+}
+
+if(car.x + car.width > canvas.width){
+car.x = canvas.width - car.width;
+}
+
+}
+
+
+// UPDATE OBSTACLES
+function updateObstacles(){
+
+obstacles.forEach((obs,index)=>{
+
+obs.y += 6;
+
+if(obs.y > canvas.height){
+obstacles.splice(index,1);
+}
+
+});
+
+}
+
+
+// DRAW CAR
+function drawCar(){
+
+ctx.fillStyle="red";
+ctx.fillRect(car.x,car.y,car.width,car.height);
+
+}
+
+
+// DRAW OBSTACLES
+function drawObstacles(){
+
+ctx.fillStyle="yellow";
+
+obstacles.forEach(obs=>{
+ctx.fillRect(obs.x,obs.y,obs.width,obs.height);
+});
+
+}
+
+
+// GAME LOOP
+function gameLoop(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+aiDrive();
+
+updateObstacles();
+
+drawCar();
+
+drawObstacles();
+
+requestAnimationFrame(gameLoop);
+
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
