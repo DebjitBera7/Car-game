@@ -1,62 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Car Avoid Game</title>
+<title>AI Car Game Menu</title>
 
 <style>
 
 body{
 margin:0;
 height:100vh;
-background:linear-gradient(#000000,#001f33);
+background:linear-gradient(#000,#001f33);
 font-family:Arial;
-color:white;
 display:flex;
 justify-content:center;
 align-items:center;
 text-align:center;
+color:white;
 }
 
 .container{
 background:rgba(0,0,0,0.6);
-padding:50px;
+padding:60px;
 border-radius:15px;
 box-shadow:0 0 30px cyan;
 }
 
 h1{
-font-size:50px;
-color:#00ffff;
-text-shadow:0 0 20px cyan;
-margin-bottom:20px;
-}
-
-p{
-font-size:20px;
+font-size:45px;
 margin-bottom:30px;
 }
 
+.gameBox{
+margin:25px;
+}
+
 button{
-padding:18px 40px;
-font-size:24px;
-margin:15px;
+padding:20px 50px;
+font-size:25px;
 border:none;
-border-radius:12px;
+border-radius:10px;
 cursor:pointer;
 background:#00ffff;
 color:black;
 font-weight:bold;
-transition:0.3s;
 }
 
 button:hover{
 background:white;
-box-shadow:0 0 20px cyan;
+box-shadow:0 0 15px cyan;
+}
+
+.mode{
+font-size:18px;
+margin-top:8px;
+color:#ccc;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -65,17 +65,26 @@ box-shadow:0 0 20px cyan;
 
 <h1>AI Car Avoid Game</h1>
 
-<p>Select Game Mode</p>
+<div class="gameBox">
 
 <a href="game.html">
 <button>Play Game 1</button>
 </a>
 
-<br>
+<div class="mode">AI Control</div>
+
+</div>
+
+
+<div class="gameBox">
 
 <a href="game2.html">
 <button>Play Game 2</button>
 </a>
+
+<div class="mode">Player Control</div>
+
+</div>
 
 </div>
 
