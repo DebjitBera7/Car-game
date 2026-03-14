@@ -1,49 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>AI Car Game</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Car Avoid Game</title>
 
 <style>
 
 body{
-background:black;
-color:white;
-text-align:center;
+margin:0;
+height:100vh;
+background:linear-gradient(#000000,#001f33);
 font-family:Arial;
-margin-top:120px;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+text-align:center;
+}
+
+.container{
+background:rgba(0,0,0,0.6);
+padding:50px;
+border-radius:15px;
+box-shadow:0 0 30px cyan;
+}
+
+h1{
+font-size:50px;
+color:#00ffff;
+text-shadow:0 0 20px cyan;
+margin-bottom:20px;
+}
+
+p{
+font-size:20px;
+margin-bottom:30px;
 }
 
 button{
-padding:20px 40px;
-font-size:25px;
-margin:20px;
-cursor:pointer;
-background:yellow;
+padding:18px 40px;
+font-size:24px;
+margin:15px;
 border:none;
-border-radius:10px;
+border-radius:12px;
+cursor:pointer;
+background:#00ffff;
+color:black;
+font-weight:bold;
+transition:0.3s;
 }
 
 button:hover{
-background:orange;
+background:white;
+box-shadow:0 0 20px cyan;
 }
 
 </style>
-
 </head>
 
 <body>
 
+<div class="container">
+
 <h1>AI Car Avoid Game</h1>
 
-<p>Select Game</p>
+<p>Select Game Mode</p>
 
 <a href="game.html">
 <button>Play Game 1</button>
 </a>
 
+<br>
+
 <a href="game2.html">
 <button>Play Game 2</button>
 </a>
+
+</div>
 
 </body>
 </html>
