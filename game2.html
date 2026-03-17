@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Self Driving Car</title>
+<title>AI Car Game</title>
 
 <style>
-
 body{
 margin:0;
 overflow:hidden;
 background:black;
+color:white;
 font-family:Arial;
 }
 
@@ -16,14 +16,8 @@ font-family:Arial;
 position:absolute;
 top:20px;
 left:20px;
-color:white;
-font-size:24px;
+font-size:22px;
 }
-
-canvas{
-display:block;
-}
-
 </style>
 
 </head>
@@ -31,88 +25,73 @@ display:block;
 <body>
 
 <div id="ui">
-Score: <span id="score">0</span><br>
-Lives: <span id="lives">5</span>
+Score: <span id="score">0</span>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 
-let score = 0;
-let lives = 5;
+let score=0;
 
-/* IMAGES */
+const road=new Image();
+road.src="images/road.png";
 
-const roadImg = new Image();
-roadImg.src = "images/road.png";
+const carImg=new Image();
+carImg.src="images/car.png";
 
-const playerImg = new Image();
-playerImg.src = "images/player.png";
+const trafficImg=new Image();
+trafficImg.src="images/player.png";
 
-const carImg = new Image();
-carImg.src = "images/car.png";
+const truckImg=new Image();
+truckImg.src="images/truck.png";
 
-const truckImg = new Image();
-truckImg.src = "images/truck.png";
-
-
-const player = {
-x: canvas.width/2-40,
-y: canvas.height-150,
-width:80,
-height:120,
+const car={
+x:canvas.width/2,
+y:canvas.height-150,
+width:50,
+height:90,
 speed:6
 };
 
-let traffic=[];
+let obstacles=[];
 
-function spawnTraffic(){
+function spawnObstacle(){
 
 let type=Math.random();
 
-traffic.push({
-
+obstacles.push({
 x:Math.random()*(canvas.width-80),
-y:-150,
-width:80,
-height:120,
-img:type<0.7?carImg:truckImg
-
+y:-100,
+width:60,
+height:100,
+img: type>0.5 ? trafficImg : truckImg
 });
 
 }
 
-setInterval(spawnTraffic,1200);
+setInterval(spawnObstacle,1200);
 
+function aiControl(){
 
-/* AI DRIVING */
+obstacles.forEach(obs=>{
 
-function aiDrive(){
+let distance=car.y-obs.y;
 
-traffic.forEach(t=>{
+if(distance>0 && distance<200){
 
-if(
-t.y > player.y-200 &&
-t.y < player.y+120
-){
-
-if(t.x < player.x){
-
-player.x += player.speed;
-
+if(obs.x<car.x){
+car.x+=car.speed;
 }
 
 else{
-
-player.x -= player.speed;
-
+car.x-=car.speed;
 }
 
 }
@@ -121,75 +100,18 @@ player.x -= player.speed;
 
 }
 
-/* UPDATE TRAFFIC */
+function updateObstacles(){
 
-function updateTraffic(){
+obstacles.forEach((obs,index)=>{
 
-traffic.forEach((t,i)=>{
+obs.y+=6;
 
-t.y+=8;
+if(obs.y>canvas.height){
 
-if(t.y>canvas.height){
-
-traffic.splice(i,1);
 score+=10;
-
 document.getElementById("score").innerText=score;
 
-}
-
-});
-
-}
-
-/* DRAW */
-
-function drawRoad(){
-
-ctx.drawImage(roadImg,0,0,canvas.width,canvas.height);
-
-}
-
-function drawPlayer(){
-
-ctx.drawImage(playerImg,player.x,player.y,player.width,player.height);
-
-}
-
-function drawTraffic(){
-
-traffic.forEach(t=>{
-
-ctx.drawImage(t.img,t.x,t.y,t.width,t.height);
-
-});
-
-}
-
-/* COLLISION */
-
-function collision(){
-
-traffic.forEach((t,i)=>{
-
-if(
-player.x < t.x+t.width &&
-player.x+player.width > t.x &&
-player.y < t.y+t.height &&
-player.y+player.height > t.y
-){
-
-lives--;
-document.getElementById("lives").innerText=lives;
-
-traffic.splice(i,1);
-
-if(lives<=0){
-
-alert("AI FAILED\nScore: "+score);
-location.reload();
-
-}
+obstacles.splice(index,1);
 
 }
 
@@ -197,23 +119,27 @@ location.reload();
 
 }
 
-/* GAME LOOP */
+function draw(){
+
+ctx.drawImage(road,0,0,canvas.width,canvas.height);
+
+ctx.drawImage(carImg,car.x,car.y,car.width,car.height);
+
+obstacles.forEach(obs=>{
+ctx.drawImage(obs.img,obs.x,obs.y,obs.width,obs.height);
+});
+
+}
 
 function gameLoop(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-drawRoad();
+aiControl();
 
-aiDrive();
+updateObstacles();
 
-drawPlayer();
-
-drawTraffic();
-
-updateTraffic();
-
-collision();
+draw();
 
 requestAnimationFrame(gameLoop);
 
