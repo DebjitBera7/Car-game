@@ -1,33 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Player Highway Game</title>
+<title>Highway Car Game</title>
 
 <style>
-body{margin:0;overflow:hidden;background:black;color:white;font-family:Arial}
+
+body{
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:Arial;
+}
 
 #ui{
 position:absolute;
 top:20px;
 left:20px;
-font-size:22px;
+font-size:24px;
 }
 
-#mobile{
+#mobileControls{
 position:fixed;
 bottom:20px;
 width:100%;
 text-align:center;
 }
 
-#mobile button{
+#mobileControls button{
+font-size:30px;
 padding:20px;
-font-size:25px;
 margin:10px;
 background:yellow;
 border:none;
 border-radius:10px;
 }
+
 </style>
 
 </head>
@@ -41,94 +49,104 @@ Lives: <span id="lives">5</span>
 
 <canvas id="gameCanvas"></canvas>
 
-<div id="mobile">
+<div id="mobileControls">
 <button id="left">◀</button>
 <button id="right">▶</button>
 </div>
 
 <script>
 
-const canvas=document.getElementById("gameCanvas");
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-let score=0;
-let lives=5;
+let score = 0;
+let lives = 5;
 
-const road=new Image();
-road.src="images/road.png";
+const road = new Image();
+road.src = "images/road.png";
 
-const player=new Image();
-player.src="images/player.png";
+const playerCar = new Image();
+playerCar.src = "images/player.png";
 
-const carImg=new Image();
-carImg.src="images/car.png";
+const carImg = new Image();
+carImg.src = "images/car.png";
 
-const truckImg=new Image();
-truckImg.src="images/truck.png";
+const truckImg = new Image();
+truckImg.src = "images/truck.png";
 
-const car={
-x:canvas.width/2,
-y:canvas.height-150,
+const car = {
+x: canvas.width/2,
+y: canvas.height-150,
 width:60,
 height:100,
 speed:8
 };
 
-let obstacles=[];
+let obstacles = [];
 
 function spawnObstacle(){
 
-let img=Math.random()>0.5?carImg:truckImg;
+let img = Math.random() > 0.5 ? carImg : truckImg;
 
 obstacles.push({
-x:Math.random()*(canvas.width-80),
-y:-120,
-width:80,
-height:120,
-img:img
+x: Math.random()*(canvas.width-60),
+y: -120,
+width:60,
+height:100,
+img: img
 });
 
 }
 
 setInterval(spawnObstacle,900);
 
-const keys={};
+const keys = {};
 
-window.addEventListener("keydown",e=>keys[e.key]=true);
-window.addEventListener("keyup",e=>keys[e.key]=false);
+window.addEventListener("keydown",e=>{
+keys[e.key]=true;
+});
+
+window.addEventListener("keyup",e=>{
+keys[e.key]=false;
+});
 
 function control(){
 
-if(keys["ArrowLeft"]) car.x-=car.speed;
+if(keys["ArrowLeft"]) car.x -= car.speed;
 
-if(keys["ArrowRight"]) car.x+=car.speed;
+if(keys["ArrowRight"]) car.x += car.speed;
+
+if(car.x < 0) car.x = 0;
+
+if(car.x + car.width > canvas.width)
+car.x = canvas.width - car.width;
 
 }
 
-document.getElementById("left").onclick=()=>{
-car.x-=60;
+document.getElementById("left").onclick = ()=>{
+car.x -= 60;
 };
 
-document.getElementById("right").onclick=()=>{
-car.x+=60;
+document.getElementById("right").onclick = ()=>{
+car.x += 60;
 };
 
-function update(){
+function updateObstacles(){
 
-obstacles.forEach((obs,i)=>{
+obstacles.forEach((obs,index)=>{
 
-obs.y+=7;
+obs.y += 7;
 
-if(obs.y>canvas.height){
+if(obs.y > canvas.height){
 
-obstacles.splice(i,1);
+obstacles.splice(index,1);
 
-score+=10;
+score += 10;
 
-document.getElementById("score").innerText=score;
+document.getElementById("score").innerText = score;
 
 }
 
@@ -138,20 +156,20 @@ document.getElementById("score").innerText=score;
 
 function collision(){
 
-obstacles.forEach((obs,i)=>{
+obstacles.forEach((obs,index)=>{
 
 if(
-car.x<obs.x+obs.width &&
-car.x+car.width>obs.x &&
-car.y<obs.y+obs.height &&
-car.y+car.height>obs.y
+car.x < obs.x + obs.width &&
+car.x + car.width > obs.x &&
+car.y < obs.y + obs.height &&
+car.y + car.height > obs.y
 ){
 
 lives--;
 
-document.getElementById("lives").innerText=lives;
+document.getElementById("lives").innerText = lives;
 
-obstacles.splice(i,1);
+obstacles.splice(index,1);
 
 }
 
@@ -163,7 +181,7 @@ function draw(){
 
 ctx.drawImage(road,0,0,canvas.width,canvas.height);
 
-ctx.drawImage(player,car.x,car.y,car.width,car.height);
+ctx.drawImage(playerCar,car.x,car.y,car.width,car.height);
 
 obstacles.forEach(obs=>{
 ctx.drawImage(obs.img,obs.x,obs.y,obs.width,obs.height);
@@ -177,7 +195,7 @@ ctx.clearRect(0,0,canvas.width,canvas.height);
 
 control();
 
-update();
+updateObstacles();
 
 collision();
 
