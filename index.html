@@ -1,90 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Highway Car Game Menu</title>
+<title>Highway Car Game</title>
 
 <style>
-
 body{
 margin:0;
 height:100vh;
-background:linear-gradient(#000,#002244);
-font-family:Arial;
+background:linear-gradient(#141e30,#243b55);
 display:flex;
 justify-content:center;
 align-items:center;
-text-align:center;
+font-family:Arial;
 color:white;
 }
 
-.container{
+.menu{
 background:rgba(0,0,0,0.7);
-padding:60px;
+padding:50px;
 border-radius:15px;
-box-shadow:0 0 25px cyan;
-}
-
-h1{
-font-size:45px;
-margin-bottom:40px;
-}
-
-.gameBox{
-margin:25px;
+box-shadow:0 0 30px cyan;
+text-align:center;
 }
 
 button{
-padding:20px 50px;
-font-size:25px;
+padding:15px 30px;
+font-size:18px;
+margin:10px;
 border:none;
 border-radius:10px;
 cursor:pointer;
-background:#00ffff;
-color:black;
-font-weight:bold;
 }
 
 button:hover{
-background:white;
-box-shadow:0 0 15px cyan;
+background:cyan;
 }
-
-.mode{
-font-size:18px;
-margin-top:8px;
-color:#ccc;
-}
-
 </style>
 
 </head>
 
 <body>
 
-<div class="container">
+<div class="menu">
 
 <h1>🚗 Highway Car Game</h1>
 
-<div class="gameBox">
+<br>
 
-<a href="game.html">
-<button>Play Game 1</button>
-</a>
+<button onclick="location.href='game.html'">
+Play Game 1
+</button>
 
-<div class="mode">Player Control</div>
+<p>Player Control</p>
 
-</div>
+<br>
 
+<button onclick="location.href='game2.html'">
+Play Game 2
+</button>
 
-<div class="gameBox">
-
-<a href="game2.html">
-<button>Play Game 2</button>
-</a>
-
-<div class="mode">AI Control</div>
-
-</div>
+<p>AI Control</p>
 
 </div>
 
