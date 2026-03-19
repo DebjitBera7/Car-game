@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Game</title>
+<title>AI Tutorial</title>
 <style>
 body{margin:0;overflow:hidden;background:black;}
-#ui{position:absolute;top:20px;left:20px;color:white;font-size:20px;}
+#ui{position:absolute;top:20px;left:20px;color:white;}
+#t{position:absolute;top:20px;right:20px;color:cyan;}
 </style>
 </head>
 
@@ -14,6 +15,8 @@ body{margin:0;overflow:hidden;background:black;}
 Score: <span id="score">0</span><br>
 Lives: <span id="lives">3</span>
 </div>
+
+<div id="t">🤖 Tutorial Mode</div>
 
 <canvas id="c"></canvas>
 
@@ -25,11 +28,10 @@ const ctx=canvas.getContext("2d");
 canvas.width=innerWidth;
 canvas.height=innerHeight;
 
-const roadLeft = canvas.width*0.2;
-const roadRight = canvas.width*0.8;
+const roadLeft=canvas.width*0.2;
+const roadRight=canvas.width*0.8;
 
-let score=0;
-let lives=3;
+let score=0,lives=3;
 
 const road=new Image();
 road.src="images/road.png";
@@ -43,11 +45,7 @@ trafficImg.src="images/player.png";
 const truckImg=new Image();
 truckImg.src="images/truck.png";
 
-const car={
-x:(roadLeft+roadRight)/2,
-y:canvas.height-150,
-w:60,h:100,s:6
-};
+const car={x:(roadLeft+roadRight)/2,y:canvas.height-150,w:60,h:100,s:6};
 
 let obs=[];
 
@@ -56,7 +54,7 @@ let x=Math.random()*(roadRight-roadLeft-60)+roadLeft;
 obs.push({x:x,y:-100,w:60,h:100,img:Math.random()>0.5?trafficImg:truckImg});
 },1200);
 
-/* 🤖 AI CONTROL */
+/* 🤖 AI */
 function ai(){
 
 let move=0;
@@ -87,21 +85,19 @@ if(car.x+car.w>roadRight) car.x=roadRight-car.w;
 
 }
 
-/* LOOP */
 function loop(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
-
 ctx.drawImage(road,0,0,canvas.width,canvas.height);
 
-/* AI car (UP) */
+/* 🚗 AI CAR (↑ direction) */
 ctx.save();
-ctx.translate(car.x+30,car.y+50);
+ctx.translate(car.x+car.w/2,car.y+car.h/2);
 ctx.rotate(Math.PI);
-ctx.drawImage(carImg,-30,-50,60,100);
+ctx.drawImage(carImg,-car.w/2,-car.h/2,car.w,car.h);
 ctx.restore();
 
-/* traffic (DOWN) */
+/* 🚙 TRAFFIC (↓ direction) */
 obs.forEach((o,i)=>{
 
 o.y+=6;
@@ -114,7 +110,6 @@ score+=10;
 scoreEl.innerText=score;
 }
 
-/* collision */
 if(car.x<o.x+o.w && car.x+car.w>o.x && car.y<o.y+o.h && car.y+car.h>o.y){
 lives--;
 livesEl.innerText=lives;
