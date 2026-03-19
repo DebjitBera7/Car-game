@@ -1,294 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Highway Car Game</title>
+<title>Highway Car Game</title>
 
 <style>
 body{
 margin:0;
-overflow:hidden;
+height:100vh;
 background:black;
-font-family:Arial;
 color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+text-align:center;
+font-family:Arial;
 }
 
-#menu{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-text-align:center;
+.box{
+background:#111;
+padding:50px;
+border-radius:15px;
+box-shadow:0 0 20px cyan;
+}
+
+h1{
+margin-bottom:30px;
 }
 
 button{
-padding:15px 25px;
+padding:15px 30px;
+margin:15px;
 font-size:18px;
-margin:10px;
 border:none;
 border-radius:10px;
 cursor:pointer;
 }
 
-#ui{
-position:absolute;
-top:20px;
-left:20px;
-font-size:22px;
-display:none;
+button:hover{
+background:cyan;
+color:black;
 }
+
 </style>
 
 </head>
 
 <body>
 
-<div id="menu">
+<div class="box">
+
 <h1>🚗 Highway Car Game</h1>
-<button onclick="startGame('player')">Player Mode</button>
-<button onclick="startGame('ai')">AI Mode</button>
+
+<!-- AI Tutorial -->
+<button onclick="location.href='game2.html'">
+Watch Tutorial
+</button>
+<p>See how AI avoids traffic 🤖</p>
+
+<br>
+
+<!-- Player Game -->
+<button onclick="location.href='game.html'">
+Play Game
+</button>
+<p>Control the car yourself 🎮</p>
+
 </div>
-
-<div id="ui">
-Score: <span id="score">0</span><br>
-Lives: <span id="lives">3</span>
-</div>
-
-<canvas id="gameCanvas"></canvas>
-
-<script>
-
-const canvas=document.getElementById("gameCanvas");
-const ctx=canvas.getContext("2d");
-
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
-let mode="player";
-let score=0;
-let lives=3;
-let gameActive=false;
-
-/* IMAGES */
-
-const road=new Image();
-road.src="images/road.png";
-
-const carImg=new Image();
-carImg.src="images/car.png";
-
-const trafficImg=new Image();
-trafficImg.src="images/player.png";
-
-const truckImg=new Image();
-truckImg.src="images/truck.png";
-
-/* LANES */
-
-const laneWidth=canvas.width/3;
-
-const lanes=[
-laneWidth*0.5-30,
-laneWidth*1.5-30,
-laneWidth*2.5-30
-];
-
-let currentLane=1;
-
-const car={
-x:lanes[1],
-y:canvas.height-150,
-width:60,
-height:100,
-speed:6
-};
-
-let obstacles=[];
-
-/* START GAME */
-
-function startGame(selectedMode){
-
-mode=selectedMode;
-
-document.getElementById("menu").style.display="none";
-document.getElementById("ui").style.display="block";
-
-gameActive=true;
-
-}
-
-/* SPAWN */
-
-function spawnObstacle(){
-
-let lane=Math.floor(Math.random()*3);
-
-let type=Math.random();
-
-obstacles.push({
-x:lanes[lane],
-y:-120,
-width:60,
-height:100,
-img:type>0.5?trafficImg:truckImg
-});
-
-}
-
-setInterval(spawnObstacle,1000);
-
-/* PLAYER CONTROL */
-
-const keys={};
-
-window.addEventListener("keydown",e=>{
-keys[e.key]=true;
-});
-
-window.addEventListener("keyup",e=>{
-keys[e.key]=false;
-});
-
-function playerControl(){
-
-if(keys["ArrowLeft"] && currentLane>0){
-currentLane--;
-}
-
-if(keys["ArrowRight"] && currentLane<2){
-currentLane++;
-}
-
-car.x=lanes[currentLane];
-
-}
-
-/* AI CONTROL */
-
-let aiLane=1;
-
-function aiControl(){
-
-obstacles.forEach(obs=>{
-
-let distance=car.y-obs.y;
-
-if(distance>0 && distance<200){
-
-if(obs.x===lanes[aiLane]){
-
-if(aiLane>0) aiLane--;
-else if(aiLane<2) aiLane++;
-
-}
-
-}
-
-});
-
-car.x=lanes[aiLane];
-
-}
-
-/* UPDATE */
-
-function update(){
-
-obstacles.forEach((obs,i)=>{
-
-obs.y+=6;
-
-if(obs.y>canvas.height){
-
-score+=10;
-document.getElementById("score").innerText=score;
-
-obstacles.splice(i,1);
-
-}
-
-});
-
-}
-
-/* COLLISION */
-
-function collision(){
-
-obstacles.forEach((obs,i)=>{
-
-if(
-car.x<obs.x+obs.width &&
-car.x+car.width>obs.x &&
-car.y<obs.y+obs.height &&
-car.y+car.height>obs.y
-){
-
-lives--;
-document.getElementById("lives").innerText=lives;
-
-obstacles.splice(i,1);
-
-if(lives<=0){
-
-alert("Game Over\nScore: "+score);
-location.reload();
-
-}
-
-}
-
-});
-
-}
-
-/* DRAW */
-
-function draw(){
-
-ctx.drawImage(road,0,0,canvas.width,canvas.height);
-
-/* Player car UP */
-
-ctx.save();
-ctx.translate(car.x+car.width/2,car.y+car.height/2);
-ctx.rotate(Math.PI);
-ctx.drawImage(carImg,-car.width/2,-car.height/2,car.width,car.height);
-ctx.restore();
-
-/* Traffic */
-
-obstacles.forEach(obs=>{
-ctx.drawImage(obs.img,obs.x,obs.y,obs.width,obs.height);
-});
-
-}
-
-/* LOOP */
-
-function gameLoop(){
-
-if(!gameActive) return;
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-if(mode==="player"){
-playerControl();
-}else{
-aiControl();
-}
-
-update();
-collision();
-draw();
-
-requestAnimationFrame(gameLoop);
-
-}
-
-gameLoop();
-
-</script>
 
 </body>
 </html>
