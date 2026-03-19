@@ -2,40 +2,34 @@
 <html>
 <head>
 <title>Player Game</title>
-
 <style>
 body{margin:0;background:black;color:white;font-family:Arial;}
 #ui{position:absolute;top:20px;left:20px;}
 #over,#pauseMenu{
-position:absolute;
-top:50%;
-left:50%;
+position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
-display:none;
-text-align:center;
-background:black;
-padding:30px;
-border-radius:10px;
+display:none;text-align:center;
+background:black;padding:30px;border-radius:10px;
 }
-button{padding:10px 20px;margin:10px;font-size:16px;}
+button{padding:10px;margin:10px;}
 #pauseBtn{position:absolute;top:20px;right:20px;}
 </style>
-
 </head>
 
 <body>
 
 <div id="ui">
 Score: <span id="score">0</span><br>
-Lives: <span id="lives">5</span>
+Lives: <span id="lives">5</span><br>
+Speed: <span id="speed">1</span>
 </div>
 
 <button id="pauseBtn">⏸ Pause</button>
 
 <div id="pauseMenu">
-<h1>⏸ PAUSED</h1>
-<button onclick="resumeGame()">▶ Resume</button><br>
-<button onclick="location.href='index.html'">🏠 Exit</button>
+<h1>PAUSED</h1>
+<button onclick="resumeGame()">Resume</button>
+<button onclick="location.href='index.html'">Exit</button>
 </div>
 
 <div id="over">
@@ -54,26 +48,31 @@ const ctx=c.getContext("2d");
 c.width=innerWidth;
 c.height=innerHeight;
 
-let gameActive=true;
-let paused=false;
+let gameActive=true, paused=false;
 
-const left=c.width*0.2;
-const right=c.width*0.8;
+const left=c.width*0.2, right=c.width*0.8;
 
-let score=0,lives=5;
+let score=0, lives=5;
+let speed=4, maxSpeed=15;
+
+let obs=[], coins=[];
+
+/* UI */
+const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
+const speedEl=document.getElementById("speed");
 
 /* IMAGES */
 const road=new Image(); road.src="images/road.png";
 const carImg=new Image(); carImg.src="images/car.png";
 const trafficImg=new Image(); trafficImg.src="images/player.png";
 const truckImg=new Image(); truckImg.src="images/truck.png";
+const coinImg=new Image(); coinImg.src="images/coin.png";
 
 /* PLAYER */
 const car={x:(left+right)/2,y:c.height-120,w:60,h:100,s:7};
 
-let obs=[];
-
-/* SPAWN */
+/* SPAWN TRAFFIC */
 setInterval(()=>{
 if(!paused && gameActive){
 obs.push({
@@ -84,14 +83,23 @@ img:Math.random()>0.5?trafficImg:truckImg
 }
 },800);
 
-/* KEY CONTROL */
+/* SPAWN COIN */
+setInterval(()=>{
+if(!paused && gameActive){
+coins.push({
+x:Math.random()*(right-left-30)+left,
+y:-50
+});
+}
+},1500);
+
+/* CONTROL */
 onkeydown=e=>{
 if(e.key==="p"){
 paused=!paused;
-document.getElementById("pauseMenu").style.display=paused?"block":"none";
+pauseMenu.style.display=paused?"block":"none";
 if(!paused) loop();
 }
-
 if(!paused){
 if(e.key==="ArrowLeft") car.x-=car.s;
 if(e.key==="ArrowRight") car.x+=car.s;
@@ -100,29 +108,24 @@ if(e.key==="ArrowRight") car.x+=car.s;
 
 /* MOBILE */
 let touchX=null;
-
-c.addEventListener("touchstart",e=>{
-touchX=e.touches[0].clientX;
-});
-
+c.addEventListener("touchstart",e=>touchX=e.touches[0].clientX);
 c.addEventListener("touchmove",e=>{
 if(!paused){
 let x=e.touches[0].clientX;
-if(x>touchX) car.x+=car.s;
-else car.x-=car.s;
+car.x += (x>touchX?car.s:-car.s);
 touchX=x;
 }
 });
 
-/* PAUSE BUTTON */
-document.getElementById("pauseBtn").onclick=()=>{
+/* PAUSE */
+pauseBtn.onclick=()=>{
 paused=true;
-document.getElementById("pauseMenu").style.display="block";
+pauseMenu.style.display="block";
 };
 
 function resumeGame(){
 paused=false;
-document.getElementById("pauseMenu").style.display="none";
+pauseMenu.style.display="none";
 loop();
 }
 
@@ -132,17 +135,18 @@ function loop(){
 if(!gameActive || paused) return;
 
 ctx.clearRect(0,0,c.width,c.height);
-
 ctx.drawImage(road,0,0,c.width,c.height);
+
+/* SPEED */
+if(speed<maxSpeed) speed+=0.002;
+speedEl.innerText=speed.toFixed(1);
 
 /* PLAYER */
 ctx.drawImage(carImg,car.x,car.y,car.w,car.h);
 
 /* TRAFFIC */
 obs.forEach((o,i)=>{
-
-o.y+=7;
-
+o.y+=speed;
 ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
 
 if(o.y>c.height){
@@ -159,11 +163,23 @@ obs.splice(i,1);
 if(lives<=0){
 gameActive=false;
 ctx.clearRect(0,0,c.width,c.height);
-document.getElementById("final").innerText=score;
-document.getElementById("over").style.display="block";
+final.innerText=score;
+over.style.display="block";
 }
 }
+});
 
+/* COINS */
+coins.forEach((coin,i)=>{
+coin.y+=speed;
+ctx.drawImage(coinImg,coin.x,coin.y,30,30);
+
+if(car.x<coin.x+30 && car.x+car.w>coin.x &&
+car.y<coin.y+30 && car.y+car.h>coin.y){
+score+=20;
+scoreEl.innerText=score;
+coins.splice(i,1);
+}
 });
 
 /* LIMIT */
@@ -172,9 +188,6 @@ if(car.x+car.w>right) car.x=right-car.w;
 
 requestAnimationFrame(loop);
 }
-
-const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
 
 loop();
 
