@@ -115,7 +115,7 @@ if(!paused) loop();
 }
 };
 
-/* 🤖 SMART AI */
+/* 🤖 SMART AI (FIXED) */
 function ai(){
 
 let dangerLeft=false;
@@ -124,7 +124,8 @@ let dangerRight=false;
 obs.forEach(o=>{
 let d=car.y-o.y;
 
-if(d>0 && d<200){
+/* 🔥 FIX: detection range increase */
+if(d>0 && d<300){
 
 if(car.x < o.x + o.w && car.x + car.w > o.x){
 
@@ -164,8 +165,10 @@ ctx.drawImage(road,0,0,c.width,c.height);
 if(speed<maxSpeed) speed+=0.002;
 speedEl.innerText=speed.toFixed(1);
 
+/* 🔥 FIX: faster AI reaction */
+car.s = Math.min(12, speed*0.9);
+
 /* AI MOVE */
-car.s = Math.min(8, speed*0.5);
 ai();
 
 /* DRAW PLAYER */
