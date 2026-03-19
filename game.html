@@ -1,11 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Player Game</title>
+<title>Highway Game</title>
+
 <style>
-body{margin:0;overflow:hidden;background:black;}
-#ui{position:absolute;top:20px;left:20px;color:white;}
+body{
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:Arial;
+}
+
+#ui{
+position:absolute;
+top:20px;
+left:20px;
+font-size:22px;
+}
 </style>
+
 </head>
 
 <body>
@@ -19,88 +33,122 @@ Lives: <span id="lives">3</span>
 
 <script>
 
-const canvas=c;
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
 
-canvas.width=innerWidth;
-canvas.height=innerHeight;
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
-const roadLeft=canvas.width*0.2;
-const roadRight=canvas.width*0.8;
+/* ROAD AREA */
+const roadLeft = canvas.width * 0.2;
+const roadRight = canvas.width * 0.8;
 
-let score=0,lives=3;
+let score = 0;
+let lives = 3;
 
-const road=new Image();
-road.src="images/road.png";
+/* IMAGES */
+const road = new Image();
+road.src = "images/road.png";
 
-const carImg=new Image();
-carImg.src="images/car.png";
+const carImg = new Image();
+carImg.src = "images/car.png";
 
-const trafficImg=new Image();
-trafficImg.src="images/player.png";
+const trafficImg = new Image();
+trafficImg.src = "images/player.png";
 
-const truckImg=new Image();
-truckImg.src="images/truck.png";
+const truckImg = new Image();
+truckImg.src = "images/truck.png";
 
-const car={x:(roadLeft+roadRight)/2,y:canvas.height-150,w:60,h:100,s:8};
-
-let obs=[];
-
-setInterval(()=>{
-let x=Math.random()*(roadRight-roadLeft-60)+roadLeft;
-obs.push({x:x,y:-100,w:60,h:100,img:Math.random()>0.5?trafficImg:truckImg});
-},1200);
-
-onkeydown=e=>{
-if(e.key=="ArrowLeft") car.x-=car.s;
-if(e.key=="ArrowRight") car.x+=car.s;
+/* PLAYER */
+const car = {
+x: (roadLeft + roadRight) / 2,
+y: canvas.height - 150,
+w: 60,
+h: 100,
+speed: 7
 };
 
+let obs = [];
+
+/* SPAWN */
+setInterval(()=>{
+let x = Math.random()*(roadRight-roadLeft-60)+roadLeft;
+
+obs.push({
+x:x,
+y:-100,
+w:60,
+h:100,
+img: Math.random()>0.5 ? trafficImg : truckImg
+});
+},1000);
+
+/* CONTROL */
+onkeydown = e=>{
+if(e.key=="ArrowLeft") car.x -= car.speed;
+if(e.key=="ArrowRight") car.x += car.speed;
+};
+
+/* 🔥 ROTATE FUNCTION */
+function drawRotated(img,x,y,w,h,angle){
+let rad = angle * Math.PI/180;
+
+ctx.save();
+ctx.translate(x+w/2,y+h/2);
+ctx.rotate(rad);
+ctx.drawImage(img,-w/2,-h/2,w,h);
+ctx.restore();
+}
+
+/* LOOP */
 function loop(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
+
+/* ROAD */
 ctx.drawImage(road,0,0,canvas.width,canvas.height);
 
-/* 🚗 PLAYER (↑ direction) */
-ctx.save();
-ctx.translate(car.x+car.w/2,car.y+car.h/2);
-ctx.rotate(Math.PI);
-ctx.drawImage(carImg,-car.w/2,-car.h/2,car.w,car.h);
-ctx.restore();
+/* 🚗 PLAYER (UP) */
+drawRotated(carImg,car.x,car.y,car.w,car.h,0);
 
-/* 🚙 TRAFFIC (↓ direction) */
+/* 🚙 TRAFFIC (DOWN) */
 obs.forEach((o,i)=>{
 
-o.y+=6;
+o.y += 6;
 
-ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
+drawRotated(o.img,o.x,o.y,o.w,o.h,180);
 
-if(o.y>canvas.height){
+/* REMOVE */
+if(o.y > canvas.height){
 obs.splice(i,1);
-score+=10;
-scoreEl.innerText=score;
+score += 10;
+document.getElementById("score").innerText = score;
 }
 
-if(car.x<o.x+o.w && car.x+car.w>o.x && car.y<o.y+o.h && car.y+car.h>o.y){
+/* COLLISION */
+if(
+car.x < o.x + o.w &&
+car.x + car.w > o.x &&
+car.y < o.y + o.h &&
+car.y + car.h > o.y
+){
 lives--;
-livesEl.innerText=lives;
+document.getElementById("lives").innerText = lives;
 obs.splice(i,1);
 }
 
 });
 
-/* boundary */
-if(car.x<roadLeft) car.x=roadLeft;
-if(car.x+car.w>roadRight) car.x=roadRight-car.w;
+/* ROAD LIMIT */
+if(car.x < roadLeft) car.x = roadLeft;
+if(car.x + car.w > roadRight) car.x = roadRight - car.w;
 
 requestAnimationFrame(loop);
 }
 
-const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
-
 loop();
 
 </script>
+
 </body>
 </html>
