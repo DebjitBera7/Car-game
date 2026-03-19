@@ -1,12 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Tutorial</title>
+<title>AI Car Game</title>
+
 <style>
-body{margin:0;overflow:hidden;background:black;}
-#ui{position:absolute;top:20px;left:20px;color:white;}
-#t{position:absolute;top:20px;right:20px;color:cyan;}
+body{
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:Arial;
+}
+
+#ui{
+position:absolute;
+top:20px;
+left:20px;
+font-size:22px;
+}
 </style>
+
 </head>
 
 <body>
@@ -16,59 +29,76 @@ Score: <span id="score">0</span><br>
 Lives: <span id="lives">3</span>
 </div>
 
-<div id="t">🤖 Tutorial Mode</div>
-
 <canvas id="c"></canvas>
 
 <script>
 
-const canvas=c;
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
 
-canvas.width=innerWidth;
-canvas.height=innerHeight;
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
-const roadLeft=canvas.width*0.2;
-const roadRight=canvas.width*0.8;
+/* ROAD AREA */
+const roadLeft = canvas.width * 0.2;
+const roadRight = canvas.width * 0.8;
 
-let score=0,lives=3;
+let score = 0;
+let lives = 3;
 
-const road=new Image();
-road.src="images/road.png";
+/* IMAGES */
+const road = new Image();
+road.src = "images/road.png";
 
-const carImg=new Image();
-carImg.src="images/car.png";
+const carImg = new Image();
+carImg.src = "images/car.png";
 
-const trafficImg=new Image();
-trafficImg.src="images/player.png";
+const trafficImg = new Image();
+trafficImg.src = "images/player.png";
 
-const truckImg=new Image();
-truckImg.src="images/truck.png";
+const truckImg = new Image();
+truckImg.src = "images/truck.png";
 
-const car={x:(roadLeft+roadRight)/2,y:canvas.height-150,w:60,h:100,s:6};
+/* PLAYER (AI CAR) */
+const car = {
+x: (roadLeft + roadRight) / 2,
+y: canvas.height - 150,
+w: 60,
+h: 100,
+speed: 6
+};
 
-let obs=[];
+let obs = [];
 
+/* SPAWN */
 setInterval(()=>{
-let x=Math.random()*(roadRight-roadLeft-60)+roadLeft;
-obs.push({x:x,y:-100,w:60,h:100,img:Math.random()>0.5?trafficImg:truckImg});
-},1200);
+let x = Math.random()*(roadRight-roadLeft-60)+roadLeft;
 
-/* 🤖 AI */
-function ai(){
+obs.push({
+x:x,
+y:-100,
+w:60,
+h:100,
+img: Math.random()>0.5 ? trafficImg : truckImg
+});
+},1000);
 
-let move=0;
+/* 🤖 AI CONTROL */
+function aiMove(){
+
+let move = 0;
 
 obs.forEach(o=>{
 
-let d=car.y-o.y;
+let d = car.y - o.y;
 
-if(d>0 && d<150){
+/* ONLY react when near */
+if(d > 0 && d < 150){
 
-if(car.x<o.x+o.w && car.x+car.w>o.x){
+if(car.x < o.x + o.w && car.x + car.w > o.x){
 
-if(o.x<car.x) move=1;
-else move=-1;
+if(o.x < car.x) move = 1;
+else move = -1;
 
 }
 
@@ -76,58 +106,71 @@ else move=-1;
 
 });
 
-if(move===1) car.x+=car.s;
-if(move===-1) car.x-=car.s;
-
-/* boundary */
-if(car.x<roadLeft) car.x=roadLeft;
-if(car.x+car.w>roadRight) car.x=roadRight-car.w;
+if(move === 1) car.x += car.speed;
+if(move === -1) car.x -= car.speed;
 
 }
 
+/* LOOP */
 function loop(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
+
+/* ROAD */
 ctx.drawImage(road,0,0,canvas.width,canvas.height);
 
-/* 🚗 AI CAR (↑ direction) */
+/* 🚗 AI CAR (UP direction) */
 ctx.save();
-ctx.translate(car.x+car.w/2,car.y+car.h/2);
-ctx.rotate(Math.PI);
-ctx.drawImage(carImg,-car.w/2,-car.h/2,car.w,car.h);
+ctx.translate(car.x + car.w/2, car.y + car.h/2);
+ctx.rotate(0);
+ctx.drawImage(carImg, -car.w/2, -car.h/2, car.w, car.h);
 ctx.restore();
 
-/* 🚙 TRAFFIC (↓ direction) */
+/* 🚙 TRAFFIC (DOWN direction) */
 obs.forEach((o,i)=>{
 
-o.y+=6;
+o.y += 6;
 
-ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
+ctx.save();
+ctx.translate(o.x + o.w/2, o.y + o.h/2);
+ctx.rotate(Math.PI);
+ctx.drawImage(o.img, -o.w/2, -o.h/2, o.w, o.h);
+ctx.restore();
 
-if(o.y>canvas.height){
+/* REMOVE */
+if(o.y > canvas.height){
 obs.splice(i,1);
-score+=10;
-scoreEl.innerText=score;
+score += 10;
+document.getElementById("score").innerText = score;
 }
 
-if(car.x<o.x+o.w && car.x+car.w>o.x && car.y<o.y+o.h && car.y+car.h>o.y){
+/* COLLISION */
+if(
+car.x < o.x + o.w &&
+car.x + car.w > o.x &&
+car.y < o.y + o.h &&
+car.y + car.h > o.y
+){
 lives--;
-livesEl.innerText=lives;
+document.getElementById("lives").innerText = lives;
 obs.splice(i,1);
 }
 
 });
 
-ai();
+/* 🤖 AI MOVE */
+aiMove();
+
+/* ROAD LIMIT */
+if(car.x < roadLeft) car.x = roadLeft;
+if(car.x + car.w > roadRight) car.x = roadRight - car.w;
 
 requestAnimationFrame(loop);
 }
 
-const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
-
 loop();
 
 </script>
+
 </body>
 </html>
