@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Player Game</title>
 <style>
 body{margin:0;background:black;color:white;}
 #ui{position:absolute;top:20px;left:20px;}
-#over{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;text-align:center;}
+#over{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+display:none;
+text-align:center;
+}
 </style>
 </head>
 
@@ -32,23 +38,18 @@ const ctx=c.getContext("2d");
 c.width=innerWidth;
 c.height=innerHeight;
 
+let gameActive=true;
+
 const left=c.width*0.2;
 const right=c.width*0.8;
 
 let score=0,lives=5;
 
 /* IMAGES */
-const road=new Image();
-road.src="images/road.png";
-
-const carImg=new Image();
-carImg.src="images/car.png";
-
-const trafficImg=new Image();
-trafficImg.src="images/player.png";
-
-const truckImg=new Image();
-truckImg.src="images/truck.png";
+const road=new Image(); road.src="images/road.png";
+const carImg=new Image(); carImg.src="images/car.png";
+const trafficImg=new Image(); trafficImg.src="images/player.png";
+const truckImg=new Image(); truckImg.src="images/truck.png";
 
 /* PLAYER */
 const car={x:(left+right)/2,y:c.height-120,w:60,h:100,s:7};
@@ -59,31 +60,40 @@ let obs=[];
 setInterval(()=>{
 obs.push({
 x:Math.random()*(right-left-60)+left,
-y:-100,
-w:60,h:100,
+y:-100,w:60,h:100,
 img:Math.random()>0.5?trafficImg:truckImg
 });
 },800);
 
-/* CONTROL */
+/* KEY CONTROL */
 onkeydown=e=>{
 if(e.key==="ArrowLeft") car.x-=car.s;
 if(e.key==="ArrowRight") car.x+=car.s;
 };
 
-/* MOBILE */
+/* MOBILE CONTROL */
+let touchX=null;
+
 c.addEventListener("touchstart",e=>{
+touchX=e.touches[0].clientX;
+});
+
+c.addEventListener("touchmove",e=>{
 let x=e.touches[0].clientX;
-if(x<c.width/2) car.x-=car.s*2;
-else car.x+=car.s*2;
+
+if(x>touchX) car.x+=car.s;
+else car.x-=car.s;
+
+touchX=x;
 });
 
 /* LOOP */
 function loop(){
 
+if(!gameActive) return;
+
 ctx.clearRect(0,0,c.width,c.height);
 
-/* ROAD */
 ctx.drawImage(road,0,0,c.width,c.height);
 
 /* PLAYER */
@@ -102,22 +112,22 @@ score+=10;
 scoreEl.innerText=score;
 }
 
-/* COLLISION */
 if(car.x<o.x+o.w && car.x+car.w>o.x && car.y<o.y+o.h && car.y+car.h>o.y){
 lives--;
 livesEl.innerText=lives;
 obs.splice(i,1);
 
 if(lives<=0){
+gameActive=false;
+ctx.clearRect(0,0,c.width,c.height);
 document.getElementById("final").innerText=score;
 document.getElementById("over").style.display="block";
-return;
 }
 }
 
 });
 
-/* ROAD LIMIT */
+/* LIMIT */
 if(car.x<left) car.x=left;
 if(car.x+car.w>right) car.x=right-car.w;
 
