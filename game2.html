@@ -74,9 +74,7 @@ const coinImg=new Image(); coinImg.src="images/coin.png";
 /* AI CAR */
 const car={x:(left+right)/2,y:c.height-120,w:60,h:100,s:6};
 
-let touchX=null;
-
-/* SPAWN TRAFFIC */
+/* SPAWN */
 setInterval(()=>{
 if(!paused && gameActive){
 obs.push({
@@ -85,9 +83,8 @@ y:-100,w:60,h:100,
 img:Math.random()>0.5?trafficImg:truckImg
 });
 }
-},800);
+},700);
 
-/* SPAWN COIN */
 setInterval(()=>{
 if(!paused && gameActive){
 coins.push({
@@ -96,9 +93,6 @@ y:-50
 });
 }
 },1500);
-
-/* MOBILE (optional viewing) */
-c.addEventListener("touchstart",e=>touchX=e.touches[0].clientX);
 
 /* PAUSE */
 pauseBtn.onclick=()=>{
@@ -112,7 +106,7 @@ pauseMenu.style.display="none";
 loop();
 }
 
-/* KEY PAUSE */
+/* KEY */
 onkeydown=e=>{
 if(e.key==="p"){
 paused=!paused;
@@ -121,22 +115,41 @@ if(!paused) loop();
 }
 };
 
-/* 🤖 AI LOGIC */
+/* 🤖 SMART AI */
 function ai(){
-let move=0;
+
+let dangerLeft=false;
+let dangerRight=false;
 
 obs.forEach(o=>{
 let d=car.y-o.y;
 
-if(d>0 && d<150){
-if(car.x<o.x+o.w && car.x+car.w>o.x){
-move = o.x<car.x ? 1 : -1;
+if(d>0 && d<200){
+
+if(car.x < o.x + o.w && car.x + car.w > o.x){
+
+if(o.x < car.x) dangerRight=true;
+else dangerLeft=true;
+
 }
+
 }
+
 });
 
-if(move===1) car.x+=car.s;
-if(move===-1) car.x-=car.s;
+/* decision */
+
+if(dangerLeft && dangerRight){
+if(car.x > (left+right)/2) car.x -= car.s;
+else car.x += car.s;
+}
+else if(dangerLeft){
+car.x -= car.s;
+}
+else if(dangerRight){
+car.x += car.s;
+}
+
 }
 
 /* LOOP */
@@ -152,9 +165,10 @@ if(speed<maxSpeed) speed+=0.002;
 speedEl.innerText=speed.toFixed(1);
 
 /* AI MOVE */
+car.s = Math.min(8, speed*0.5);
 ai();
 
-/* PLAYER */
+/* DRAW PLAYER */
 ctx.drawImage(carImg,car.x,car.y,car.w,car.h);
 
 /* TRAFFIC */
