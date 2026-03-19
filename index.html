@@ -4,32 +4,44 @@
 <title>AI Highway Game</title>
 
 <style>
-
 body{
 margin:0;
 height:100vh;
-background:linear-gradient(180deg,#000,#020d1f);
 display:flex;
 justify-content:center;
 align-items:center;
 font-family:Arial;
+background:linear-gradient(135deg,#000,#001f3f);
 color:white;
+}
+
+/* GLOW */
+body::before{
+content:"";
+position:absolute;
+width:400px;
+height:400px;
+background:cyan;
+filter:blur(150px);
+opacity:0.2;
+top:-100px;
+left:-100px;
 }
 
 /* BOX */
 .container{
 text-align:center;
-padding:50px;
+padding:60px;
 border-radius:20px;
 background:rgba(0,0,0,0.6);
+backdrop-filter:blur(10px);
 box-shadow:0 0 30px cyan;
 }
 
 /* TITLE */
 h1{
-font-size:40px;
-margin-bottom:30px;
-text-shadow:0 0 15px cyan;
+font-size:45px;
+text-shadow:0 0 20px cyan;
 }
 
 /* BUTTON */
@@ -42,24 +54,21 @@ border-radius:10px;
 cursor:pointer;
 background:cyan;
 color:black;
+font-weight:bold;
 transition:0.3s;
 }
 
 button:hover{
-background:white;
 transform:scale(1.1);
 box-shadow:0 0 20px cyan;
+background:white;
 }
 
-/* TEXT */
 p{
-margin-top:5px;
-font-size:14px;
-color:#ccc;
+color:#aaa;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -68,19 +77,17 @@ color:#ccc;
 
 <h1>🚗 AI Highway Game</h1>
 
-<!-- AI -->
 <button onclick="location.href='game2.html'">
 🤖 Watch Tutorial
 </button>
-<p>See how AI avoids traffic</p>
+<p>AI controls the car</p>
 
 <br>
 
-<!-- PLAYER -->
 <button onclick="location.href='game.html'">
 🎮 Play Game
 </button>
-<p>Control the car yourself</p>
+<p>Control manually</p>
 
 </div>
 
