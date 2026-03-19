@@ -1,44 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Car Game</title>
-
+<title>AI Game</title>
 <style>
-body{
-margin:0;
-overflow:hidden;
-background:black;
-color:white;
-font-family:Arial;
-}
-
-#ui{
-position:absolute;
-top:20px;
-left:20px;
-font-size:22px;
-}
+body{margin:0;overflow:hidden;background:black;}
+#ui{position:absolute;top:20px;left:20px;color:white;font-size:20px;}
 </style>
-
 </head>
 
 <body>
 
 <div id="ui">
-Score: <span id="score">0</span>
+Score: <span id="score">0</span><br>
+Lives: <span id="lives">3</span>
 </div>
 
-<canvas id="gameCanvas"></canvas>
+<canvas id="c"></canvas>
 
 <script>
 
-const canvas=document.getElementById("gameCanvas");
+const canvas=c;
 const ctx=canvas.getContext("2d");
 
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+
+const roadLeft = canvas.width*0.2;
+const roadRight = canvas.width*0.8;
 
 let score=0;
+let lives=3;
 
 const road=new Image();
 road.src="images/road.png";
@@ -53,101 +44,95 @@ const truckImg=new Image();
 truckImg.src="images/truck.png";
 
 const car={
-x:canvas.width/2,
+x:(roadLeft+roadRight)/2,
 y:canvas.height-150,
-width:50,
-height:90,
-speed:6
+w:60,h:100,s:6
 };
 
-let obstacles=[];
+let obs=[];
 
-function spawnObstacle(){
+setInterval(()=>{
+let x=Math.random()*(roadRight-roadLeft-60)+roadLeft;
+obs.push({x:x,y:-100,w:60,h:100,img:Math.random()>0.5?trafficImg:truckImg});
+},1200);
 
-let type=Math.random();
+/* 🤖 AI CONTROL */
+function ai(){
 
-obstacles.push({
-x:Math.random()*(canvas.width-80),
-y:-100,
-width:60,
-height:100,
-img: type>0.5 ? trafficImg : truckImg
-});
+let move=0;
 
-}
+obs.forEach(o=>{
 
-setInterval(spawnObstacle,1200);
+let d=car.y-o.y;
 
-function aiControl(){
+if(d>0 && d<150){
 
-obstacles.forEach(obs=>{
+if(car.x<o.x+o.w && car.x+car.w>o.x){
 
-let distance=car.y-obs.y;
+if(o.x<car.x) move=1;
+else move=-1;
 
-if(distance>0 && distance<200){
-
-if(obs.x<car.x){
-car.x+=car.speed;
-}
-
-else{
-car.x-=car.speed;
 }
 
 }
 
 });
 
-}
+if(move===1) car.x+=car.s;
+if(move===-1) car.x-=car.s;
 
-function updateObstacles(){
-
-obstacles.forEach((obs,index)=>{
-
-obs.y+=6;
-
-if(obs.y>canvas.height){
-
-score+=10;
-document.getElementById("score").innerText=score;
-
-obstacles.splice(index,1);
+/* boundary */
+if(car.x<roadLeft) car.x=roadLeft;
+if(car.x+car.w>roadRight) car.x=roadRight-car.w;
 
 }
 
-});
-
-}
-
-function draw(){
-
-ctx.drawImage(road,0,0,canvas.width,canvas.height);
-
-ctx.drawImage(carImg,car.x,car.y,car.width,car.height);
-
-obstacles.forEach(obs=>{
-ctx.drawImage(obs.img,obs.x,obs.y,obs.width,obs.height);
-});
-
-}
-
-function gameLoop(){
+/* LOOP */
+function loop(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-aiControl();
+ctx.drawImage(road,0,0,canvas.width,canvas.height);
 
-updateObstacles();
+/* AI car (UP) */
+ctx.save();
+ctx.translate(car.x+30,car.y+50);
+ctx.rotate(Math.PI);
+ctx.drawImage(carImg,-30,-50,60,100);
+ctx.restore();
 
-draw();
+/* traffic (DOWN) */
+obs.forEach((o,i)=>{
 
-requestAnimationFrame(gameLoop);
+o.y+=6;
 
+ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
+
+if(o.y>canvas.height){
+obs.splice(i,1);
+score+=10;
+scoreEl.innerText=score;
 }
 
-gameLoop();
+/* collision */
+if(car.x<o.x+o.w && car.x+car.w>o.x && car.y<o.y+o.h && car.y+car.h>o.y){
+lives--;
+livesEl.innerText=lives;
+obs.splice(i,1);
+}
+
+});
+
+ai();
+
+requestAnimationFrame(loop);
+}
+
+const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
+
+loop();
 
 </script>
-
 </body>
 </html>
