@@ -82,43 +82,34 @@ speed:6
 let obstacles = [];
 let coins = [];
 
-// KEYBOARD CONTROL
+// KEYBOARD
 const keys = {};
 window.addEventListener("keydown", e=> keys[e.key]=true);
 window.addEventListener("keyup", e=> keys[e.key]=false);
 
-// 📱 MOBILE CONTROL
-let touchStartX = 0;
-let touchStartY = 0;
+// MOBILE
+let touchX = 0, touchY = 0;
 
 canvas.addEventListener("touchstart", e=>{
-touchStartX = e.touches[0].clientX;
-touchStartY = e.touches[0].clientY;
+touchX = e.touches[0].clientX;
+touchY = e.touches[0].clientY;
 });
 
 canvas.addEventListener("touchmove", e=>{
-let touchX = e.touches[0].clientX;
-let touchY = e.touches[0].clientY;
+let x = e.touches[0].clientX;
+let y = e.touches[0].clientY;
 
-// LEFT / RIGHT
-if(touchX > touchStartX){
-car.x += car.speed;
-} else {
-car.x -= car.speed;
-}
+if(x > touchX) car.x += car.speed;
+else car.x -= car.speed;
 
-// UP / DOWN
-if(touchY < touchStartY){
-car.y -= car.speed;
-} else {
-car.y += car.speed;
-}
+if(y < touchY) car.y -= car.speed;
+else car.y += car.speed;
 
-touchStartX = touchX;
-touchStartY = touchY;
+touchX = x;
+touchY = y;
 });
 
-// CONTROL FUNCTION
+// CONTROL
 function control(){
 if(keys["ArrowLeft"]) car.x -= car.speed;
 if(keys["ArrowRight"]) car.x += car.speed;
@@ -127,12 +118,9 @@ if(keys["ArrowDown"]) car.y += car.speed;
 
 // boundary
 if(car.x < roadLeft) car.x = roadLeft;
-if(car.x + car.w > roadRight)
-car.x = roadRight - car.w;
-
+if(car.x + car.w > roadRight) car.x = roadRight - car.w;
 if(car.y < 0) car.y = 0;
-if(car.y + car.h > canvas.height)
-car.y = canvas.height - car.h;
+if(car.y + car.h > canvas.height) car.y = canvas.height - car.h;
 }
 
 // TRAFFIC
@@ -146,7 +134,7 @@ img: Math.random()>0.5 ? carImg : truckImg
 });
 },700);
 
-// COINS
+// COIN
 setInterval(()=>{
 coins.push({
 x: roadLeft + Math.random()*(roadRight-roadLeft-30),
@@ -154,9 +142,9 @@ y:-50
 });
 },1200);
 
-// SPEED
+// SPEED INCREASE
 setInterval(()=>{
-speed += 0.5;
+speed += 0.3; // smooth increase
 speedEl.innerText = speed.toFixed(1);
 },1000);
 
