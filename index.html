@@ -1,191 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Car Game</title>
+<title>AI Highway Game</title>
 
 <style>
-body{
+*{
 margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',Arial,sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at top,#020617,#000);
 overflow:hidden;
-background:black;
 color:white;
-font-family:Arial;
 }
 
-#ui{
+/* ANIMATED BACKGROUND GRID */
+body::before{
+content:"";
 position:absolute;
-top:20px;
-left:20px;
-font-size:20px;
+width:200%;
+height:200%;
+background:
+linear-gradient(#00f7ff22 1px,transparent 1px),
+linear-gradient(90deg,#00f7ff22 1px,transparent 1px);
+background-size:60px 60px;
+animation:moveGrid 10s linear infinite;
 }
 
-#gameOver{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-display:none;
+@keyframes moveGrid{
+0%{transform:translate(0,0)}
+100%{transform:translate(-60px,-60px)}
+}
+
+/* CONTAINER */
+.container{
 text-align:center;
+z-index:2;
 }
-</style>
 
+/* TITLE */
+h1{
+font-size:50px;
+margin-bottom:60px;
+background:linear-gradient(90deg,#00f7ff,#00ffcc);
+-webkit-background-clip:text;
+color:transparent;
+text-shadow:0 0 30px #00f7ff;
+}
+
+/* GLASS CARD */
+.card{
+padding:40px;
+border-radius:25px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(15px);
+border:1px solid rgba(0,255,255,0.3);
+box-shadow:0 0 50px #00f7ff33;
+}
+
+/* BUTTON */
+button{
+display:block;
+width:280px;
+margin:20px auto;
+padding:16px;
+font-size:20px;
+border:none;
+border-radius:15px;
+cursor:pointer;
+font-weight:bold;
+transition:0.3s;
+}
+
+/* AI BUTTON */
+.ai-btn{
+background:linear-gradient(90deg,#00f7ff,#00ffcc);
+color:black;
+box-shadow:0 0 25px #00f7ff;
+}
+
+/* PLAY BUTTON */
+.play-btn{
+background:white;
+color:black;
+}
+
+/* HOVER EFFECT */
+button:hover{
+transform:scale(1.1);
+box-shadow:0 0 40px #00f7ff;
+}
+
+/* GLOW DOTS */
+.glow{
+position:absolute;
+width:200px;
+height:200px;
+background:#00f7ff33;
+filter:blur(100px);
+border-radius:50%;
+animation:float 6s infinite alternate;
+}
+
+.glow:nth-child(1){top:10%;left:10%;}
+.glow:nth-child(2){bottom:10%;right:10%;}
+
+@keyframes float{
+from{transform:translateY(0)}
+to{transform:translateY(-50px)}
+}
+
+</style>
 </head>
 
 <body>
 
-<div id="ui">
-Score: <span id="score">0</span><br>
-Lives: <span id="lives">5</span>
+<div class="glow"></div>
+<div class="glow"></div>
+
+<div class="container">
+
+<h1>🚗 AI Highway Game</h1>
+
+<div class="card">
+
+<button class="ai-btn" onclick="location.href='game2.html'">
+🤖 AI Demo
+</button>
+
+<button class="play-btn" onclick="location.href='game.html'">
+🎮 Play Game
+</button>
+
 </div>
 
-<canvas id="canvas"></canvas>
-
-<div id="gameOver">
-<h1>GAME OVER</h1>
-<p>Score: <span id="final"></span></p>
-<button onclick="location.reload()">Restart</button>
 </div>
-
-<script>
-
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const roadLeft = canvas.width * 0.3;
-const roadRight = canvas.width * 0.7;
-
-let score = 0;
-let lives = 5;
-let gameActive = true;
-
-// IMAGES
-const road = new Image();
-road.src = "images/road.png";
-
-const playerImg = new Image();
-playerImg.src = "images/player.png";
-
-const carImg = new Image();
-carImg.src = "images/car.png";
-
-const truckImg = new Image();
-truckImg.src = "images/truck.png";
-
-// PLAYER
-const car = {
-x: canvas.width/2,
-y: canvas.height-150,
-w:60,
-h:100,
-speed:6
-};
-
-let obstacles = [];
-
-// CONTROL
-const keys = {};
-
-window.addEventListener("keydown", e=>keys[e.key]=true);
-window.addEventListener("keyup", e=>keys[e.key]=false);
-
-function control(){
-
-if(keys["ArrowLeft"]) car.x -= car.speed;
-if(keys["ArrowRight"]) car.x += car.speed;
-if(keys["ArrowUp"]) car.y -= car.speed;
-if(keys["ArrowDown"]) car.y += car.speed;
-
-// boundary
-if(car.x < roadLeft) car.x = roadLeft;
-if(car.x + car.w > roadRight) car.x = roadRight - car.w;
-
-if(car.y < 0) car.y = 0;
-if(car.y + car.h > canvas.height) car.y = canvas.height - car.h;
-
-}
-
-// SPAWN
-function spawn(){
-obstacles.push({
-x: roadLeft + Math.random()*(roadRight-roadLeft-60),
-y:-100,
-w:60,
-h:100,
-img: Math.random()>0.5 ? carImg : truckImg
-});
-}
-
-setInterval(spawn,800);
-
-// UPDATE
-function update(){
-obstacles.forEach((o,i)=>{
-o.y += 6;
-
-if(o.y > canvas.height){
-obstacles.splice(i,1);
-score += 10;
-scoreEl.innerText = score;
-}
-
-// collision
-if(
-car.x < o.x+o.w &&
-car.x+car.w > o.x &&
-car.y < o.y+o.h &&
-car.y+car.h > o.y
-){
-lives--;
-livesEl.innerText = lives;
-obstacles.splice(i,1);
-
-if(lives <= 0){
-gameActive = false;
-final.innerText = score;
-gameOver.style.display="block";
-}
-}
-
-});
-}
-
-// DRAW
-function draw(){
-
-ctx.drawImage(road,0,0,canvas.width,canvas.height);
-
-ctx.drawImage(playerImg,car.x,car.y,car.w,car.h);
-
-obstacles.forEach(o=>{
-ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
-});
-}
-
-// LOOP
-function loop(){
-
-if(!gameActive) return;
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-control();
-update();
-draw();
-
-requestAnimationFrame(loop);
-}
-
-const scoreEl = document.getElementById("score");
-const livesEl = document.getElementById("lives");
-const final = document.getElementById("final");
-const gameOver = document.getElementById("gameOver");
-
-loop();
-
-</script>
 
 </body>
 </html>
