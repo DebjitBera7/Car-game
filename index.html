@@ -11,26 +11,37 @@ box-sizing:border-box;
 font-family:Arial;
 }
 
-/* BACKGROUND ANIMATION */
+/* BACKGROUND */
 body{
 height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-background:linear-gradient(270deg,#000,#020024,#090979,#000);
-background-size:600% 600%;
-animation:bgMove 10s infinite alternate;
+background:black;
+overflow:hidden;
 color:white;
 }
 
-@keyframes bgMove{
-0%{background-position:0%}
-100%{background-position:100%}
+/* MOVING LIGHT BACKGROUND */
+body::before{
+content:"";
+position:absolute;
+width:200%;
+height:200%;
+background:radial-gradient(circle,#00f7ff33,transparent);
+animation:moveBg 8s linear infinite;
+}
+
+@keyframes moveBg{
+0%{transform:translate(0,0)}
+100%{transform:translate(-50%,-50%)}
 }
 
 /* CONTAINER */
 .container{
+position:relative;
 text-align:center;
+z-index:2;
 width:90%;
 max-width:450px;
 }
@@ -40,7 +51,13 @@ h1{
 font-size:42px;
 margin-bottom:40px;
 color:#00f7ff;
-text-shadow:0 0 20px #00f7ff;
+text-shadow:0 0 25px #00f7ff;
+animation:glow 2s infinite alternate;
+}
+
+@keyframes glow{
+from{opacity:0.7}
+to{opacity:1}
 }
 
 /* CARD */
@@ -53,7 +70,7 @@ position:relative;
 overflow:hidden;
 }
 
-/* GLOW EFFECT */
+/* GLOW BORDER */
 .card::before{
 content:"";
 position:absolute;
@@ -63,30 +80,30 @@ right:-2px;
 bottom:-2px;
 background:linear-gradient(45deg,#00f7ff,#ff00ff,#00f7ff);
 z-index:-1;
-filter:blur(20px);
-opacity:0.6;
+filter:blur(25px);
+opacity:0.7;
 }
 
 /* AI CARD */
 .ai{
-background:rgba(0,0,0,0.7);
+background:rgba(0,0,0,0.75);
 border:1px solid #00f7ff;
 }
 
 /* PLAYER CARD */
 .player{
-background:rgba(0,0,0,0.7);
+background:rgba(0,0,0,0.75);
 border:1px solid #aaa;
 }
 
-/* HOVER */
+/* FLOAT EFFECT */
 .card:hover{
-transform:scale(1.07);
+transform:translateY(-10px) scale(1.05);
 }
 
 /* BUTTON */
 button{
-padding:16px 30px;
+padding:16px 35px;
 font-size:18px;
 border:none;
 border-radius:12px;
@@ -102,10 +119,18 @@ color:black;
 box-shadow:0 0 20px #00f7ff;
 }
 
+.ai button:hover{
+box-shadow:0 0 40px #00f7ff;
+}
+
 /* PLAYER BUTTON */
 .player button{
 background:white;
 color:black;
+}
+
+.player button:hover{
+transform:scale(1.1);
 }
 
 /* TEXT */
@@ -125,6 +150,7 @@ font-size:14px;
 font-weight:bold;
 }
 
+/* BADGES */
 .ai-badge{
 background:#00f7ff;
 color:black;
@@ -148,16 +174,9 @@ color:black;
 <div class="card ai">
 <div class="badge ai-badge">🤖 AI MODE</div><br>
 <button onclick="location.href='game2.html'">👁 Watch Tutorial</button>
-<div class="label">AI drives automatically</div>
+<div class="label">AI controls the car automatically</div>
 </div>
 
 <!-- PLAYER MODE -->
 <div class="card player">
-<div class="badge player-badge">🎮 PLAYER MODE</div><br>
-<button onclick="location.href='game.html'">Play Game</button>
-</div>
-
-</div>
-
-</body>
-</html>
+<div class="badge player-badge">🎮
