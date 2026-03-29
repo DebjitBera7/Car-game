@@ -35,7 +35,8 @@ text-align:center;
 
 <div id="ui">
 Score: <span id="score">0</span><br>
-Lives: <span id="lives">5</span>
+Lives: <span id="lives">5</span><br>
+Speed: <span id="speed">5</span>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -60,39 +61,65 @@ const roadRight = canvas.width * 0.7;
 let score = 0;
 let lives = 5;
 let gameActive = true;
+let speed = 5;
 
 // IMAGES
-const road = new Image();
-road.src = "images/road.png";
-
-const playerImg = new Image();
-playerImg.src = "images/player.png";
-
-const carImg = new Image();
-carImg.src = "images/car.png";
-
-const truckImg = new Image();
-truckImg.src = "images/truck.png";
+const road = new Image(); road.src = "images/road.png";
+const playerImg = new Image(); playerImg.src = "images/player.png";
+const carImg = new Image(); carImg.src = "images/car.png";
+const truckImg = new Image(); truckImg.src = "images/truck.png";
+const coinImg = new Image(); coinImg.src = "images/coin.png";
 
 // PLAYER
 const car = {
 x: canvas.width/2,
-y: canvas.height-150,
+y: canvas.height - 150,
 w:60,
 h:100,
 speed:6
 };
 
 let obstacles = [];
+let coins = [];
 
-// CONTROL
+// KEYBOARD CONTROL
 const keys = {};
+window.addEventListener("keydown", e=> keys[e.key]=true);
+window.addEventListener("keyup", e=> keys[e.key]=false);
 
-window.addEventListener("keydown", e=>keys[e.key]=true);
-window.addEventListener("keyup", e=>keys[e.key]=false);
+// 📱 MOBILE CONTROL
+let touchStartX = 0;
+let touchStartY = 0;
 
+canvas.addEventListener("touchstart", e=>{
+touchStartX = e.touches[0].clientX;
+touchStartY = e.touches[0].clientY;
+});
+
+canvas.addEventListener("touchmove", e=>{
+let touchX = e.touches[0].clientX;
+let touchY = e.touches[0].clientY;
+
+// LEFT / RIGHT
+if(touchX > touchStartX){
+car.x += car.speed;
+} else {
+car.x -= car.speed;
+}
+
+// UP / DOWN
+if(touchY < touchStartY){
+car.y -= car.speed;
+} else {
+car.y += car.speed;
+}
+
+touchStartX = touchX;
+touchStartY = touchY;
+});
+
+// CONTROL FUNCTION
 function control(){
-
 if(keys["ArrowLeft"]) car.x -= car.speed;
 if(keys["ArrowRight"]) car.x += car.speed;
 if(keys["ArrowUp"]) car.y -= car.speed;
@@ -100,15 +127,16 @@ if(keys["ArrowDown"]) car.y += car.speed;
 
 // boundary
 if(car.x < roadLeft) car.x = roadLeft;
-if(car.x + car.w > roadRight) car.x = roadRight - car.w;
+if(car.x + car.w > roadRight)
+car.x = roadRight - car.w;
 
 if(car.y < 0) car.y = 0;
-if(car.y + car.h > canvas.height) car.y = canvas.height - car.h;
-
+if(car.y + car.h > canvas.height)
+car.y = canvas.height - car.h;
 }
 
-// SPAWN
-function spawn(){
+// TRAFFIC
+setInterval(()=>{
 obstacles.push({
 x: roadLeft + Math.random()*(roadRight-roadLeft-60),
 y:-100,
@@ -116,14 +144,28 @@ w:60,
 h:100,
 img: Math.random()>0.5 ? carImg : truckImg
 });
-}
+},700);
 
-setInterval(spawn,800);
+// COINS
+setInterval(()=>{
+coins.push({
+x: roadLeft + Math.random()*(roadRight-roadLeft-30),
+y:-50
+});
+},1200);
+
+// SPEED
+setInterval(()=>{
+speed += 0.5;
+speedEl.innerText = speed.toFixed(1);
+},1000);
 
 // UPDATE
 function update(){
+
+// traffic
 obstacles.forEach((o,i)=>{
-o.y += 6;
+o.y += speed;
 
 if(o.y > canvas.height){
 obstacles.splice(i,1);
@@ -131,7 +173,6 @@ score += 10;
 scoreEl.innerText = score;
 }
 
-// collision
 if(
 car.x < o.x+o.w &&
 car.x+car.w > o.x &&
@@ -148,25 +189,41 @@ final.innerText = score;
 gameOver.style.display="block";
 }
 }
+});
 
+// coins
+coins.forEach((c,i)=>{
+c.y += speed;
+
+if(
+car.x < c.x+30 &&
+car.x+car.w > c.x &&
+car.y < c.y+30 &&
+car.y+car.h > c.y
+){
+score += 20;
+scoreEl.innerText = score;
+coins.splice(i,1);
+}
 });
 }
 
 // DRAW
 function draw(){
-
 ctx.drawImage(road,0,0,canvas.width,canvas.height);
-
 ctx.drawImage(playerImg,car.x,car.y,car.w,car.h);
 
 obstacles.forEach(o=>{
 ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
 });
+
+coins.forEach(c=>{
+ctx.drawImage(coinImg,c.x,c.y,30,30);
+});
 }
 
 // LOOP
 function loop(){
-
 if(!gameActive) return;
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -178,8 +235,10 @@ draw();
 requestAnimationFrame(loop);
 }
 
+// UI
 const scoreEl = document.getElementById("score");
 const livesEl = document.getElementById("lives");
+const speedEl = document.getElementById("speed");
 const final = document.getElementById("final");
 const gameOver = document.getElementById("gameOver");
 
