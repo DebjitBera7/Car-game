@@ -1,19 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Game</title>
+<title>AI Car Game</title>
 
 <style>
-body{margin:0;background:black;color:white;font-family:Arial;}
-#ui{position:absolute;top:20px;left:20px;}
-#over,#pauseMenu{
-position:absolute;top:50%;left:50%;
-transform:translate(-50%,-50%);
-display:none;text-align:center;
-background:black;padding:30px;border-radius:10px;
+body{
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:Arial;
 }
-button{padding:10px;margin:10px;}
-#pauseBtn{position:absolute;top:20px;right:20px;}
+
+#ui{
+position:absolute;
+top:20px;
+left:20px;
+font-size:20px;
+}
+
+#gameOver{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+display:none;
+text-align:center;
+}
 </style>
 
 </head>
@@ -23,205 +36,167 @@ button{padding:10px;margin:10px;}
 <div id="ui">
 Score: <span id="score">0</span><br>
 Lives: <span id="lives">5</span><br>
-Speed: <span id="speed">1</span>
+Speed: <span id="speed">5</span>
 </div>
 
-<button id="pauseBtn">⏸ Pause</button>
+<canvas id="canvas"></canvas>
 
-<div id="pauseMenu">
-<h1>PAUSED</h1>
-<button onclick="resumeGame()">Resume</button>
-<button onclick="location.href='index.html'">Exit</button>
-</div>
-
-<div id="over">
+<div id="gameOver">
 <h1>GAME OVER</h1>
 <p>Score: <span id="final"></span></p>
 <button onclick="location.reload()">Restart</button>
 </div>
 
-<canvas id="c"></canvas>
-
 <script>
 
-const c=document.getElementById("c");
-const ctx=c.getContext("2d");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-c.width=innerWidth;
-c.height=innerHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-let gameActive=true, paused=false;
+// ROAD LIMIT
+const roadLeft = canvas.width * 0.3;
+const roadRight = canvas.width * 0.7;
 
-const left=c.width*0.2, right=c.width*0.8;
+let score = 0;
+let lives = 5;
+let speed = 5;
+let gameActive = true;
 
-let score=0, lives=5;
-let speed=4, maxSpeed=15;
+// IMAGES
+const road = new Image(); road.src = "images/road.png";
+const playerImg = new Image(); playerImg.src = "images/player.png";
+const carImg = new Image(); carImg.src = "images/car.png";
+const truckImg = new Image(); truckImg.src = "images/truck.png";
 
-let obs=[], coins=[];
+// PLAYER (AI)
+const car = {
+x: canvas.width/2,
+y: canvas.height - 150,
+w:60,
+h:100,
+speed:6
+};
 
-/* UI */
-const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
-const speedEl=document.getElementById("speed");
+let obstacles = [];
 
-/* IMAGES */
-const road=new Image(); road.src="images/road.png";
-const carImg=new Image(); carImg.src="images/car.png";
-const trafficImg=new Image(); trafficImg.src="images/player.png";
-const truckImg=new Image(); truckImg.src="images/truck.png";
-const coinImg=new Image(); coinImg.src="images/coin.png";
-
-/* AI CAR */
-const car={x:(left+right)/2,y:c.height-120,w:60,h:100,s:6};
-
-/* SPAWN */
+// 🚙 SPAWN
 setInterval(()=>{
-if(!paused && gameActive){
-obs.push({
-x:Math.random()*(right-left-60)+left,
-y:-100,w:60,h:100,
-img:Math.random()>0.5?trafficImg:truckImg
+obstacles.push({
+x: roadLeft + Math.random()*(roadRight-roadLeft-60),
+y:-100,
+w:60,
+h:100,
+img: Math.random()>0.5 ? carImg : truckImg
 });
-}
 },700);
 
+// 🚀 SPEED INCREASE
 setInterval(()=>{
-if(!paused && gameActive){
-coins.push({
-x:Math.random()*(right-left-30)+left,
-y:-50
-});
-}
-},1500);
+speed += 0.3;
+speedEl.innerText = speed.toFixed(1);
+},1000);
 
-/* PAUSE */
-pauseBtn.onclick=()=>{
-paused=true;
-pauseMenu.style.display="block";
-};
+// 🤖 AI CONTROL (ONLY MOVE WHEN NEEDED)
+function aiDrive(){
 
-function resumeGame(){
-paused=false;
-pauseMenu.style.display="none";
-loop();
-}
+let dangerLeft = false;
+let dangerRight = false;
 
-/* KEY */
-onkeydown=e=>{
-if(e.key==="p"){
-paused=!paused;
-pauseMenu.style.display=paused?"block":"none";
-if(!paused) loop();
-}
-};
+obstacles.forEach(o=>{
+let d = car.y - o.y;
 
-/* 🤖 SMART AI (FIXED) */
-function ai(){
+if(d > 0 && d < 150){
 
-let dangerLeft=false;
-let dangerRight=false;
-
-obs.forEach(o=>{
-let d=car.y-o.y;
-
-/* 🔥 FIX: detection range increase */
-if(d>0 && d<300){
-
-if(car.x < o.x + o.w && car.x + car.w > o.x){
-
-if(o.x < car.x) dangerRight=true;
-else dangerLeft=true;
+if(o.x < car.x) dangerLeft = true;
+if(o.x > car.x) dangerRight = true;
 
 }
-
-}
-
 });
 
-/* decision */
-
-if(dangerLeft && dangerRight){
-if(car.x > (left+right)/2) car.x -= car.s;
-else car.x += car.s;
+// decision
+if(dangerLeft && !dangerRight){
+car.x += car.speed;
 }
-else if(dangerLeft){
-car.x -= car.s;
-}
-else if(dangerRight){
-car.x += car.s;
+else if(dangerRight && !dangerLeft){
+car.x -= car.speed;
 }
 
+// boundary
+if(car.x < roadLeft) car.x = roadLeft;
+if(car.x + car.w > roadRight)
+car.x = roadRight - car.w;
 }
 
-/* LOOP */
+// UPDATE
+function update(){
+
+obstacles.forEach((o,i)=>{
+o.y += speed;
+
+// remove
+if(o.y > canvas.height){
+obstacles.splice(i,1);
+score += 10;
+scoreEl.innerText = score;
+}
+
+// collision
+if(
+car.x < o.x+o.w &&
+car.x+car.w > o.x &&
+car.y < o.y+o.h &&
+car.y+car.h > o.y
+){
+lives--;
+livesEl.innerText = lives;
+obstacles.splice(i,1);
+
+if(lives <= 0){
+gameActive = false;
+final.innerText = score;
+gameOver.style.display="block";
+}
+}
+
+});
+}
+
+// DRAW
+function draw(){
+ctx.drawImage(road,0,0,canvas.width,canvas.height);
+ctx.drawImage(playerImg,car.x,car.y,car.w,car.h);
+
+obstacles.forEach(o=>{
+ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
+});
+}
+
+// LOOP
 function loop(){
 
-if(!gameActive || paused) return;
+if(!gameActive) return;
 
-ctx.clearRect(0,0,c.width,c.height);
-ctx.drawImage(road,0,0,c.width,c.height);
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-/* SPEED */
-if(speed<maxSpeed) speed+=0.002;
-speedEl.innerText=speed.toFixed(1);
-
-/* 🔥 FIX: faster AI reaction */
-car.s = Math.min(12, speed*0.9);
-
-/* AI MOVE */
-ai();
-
-/* DRAW PLAYER */
-ctx.drawImage(carImg,car.x,car.y,car.w,car.h);
-
-/* TRAFFIC */
-obs.forEach((o,i)=>{
-o.y+=speed;
-ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
-
-if(o.y>c.height){
-obs.splice(i,1);
-score+=10;
-scoreEl.innerText=score;
-}
-
-if(car.x<o.x+o.w && car.x+car.w>o.x &&
-car.y<o.y+o.h && car.y+car.h>o.y){
-lives--;
-livesEl.innerText=lives;
-obs.splice(i,1);
-
-if(lives<=0){
-gameActive=false;
-ctx.clearRect(0,0,c.width,c.height);
-final.innerText=score;
-over.style.display="block";
-}
-}
-});
-
-/* COINS */
-coins.forEach((coin,i)=>{
-coin.y+=speed;
-ctx.drawImage(coinImg,coin.x,coin.y,30,30);
-
-if(car.x<coin.x+30 && car.x+car.w>coin.x &&
-car.y<coin.y+30 && car.y+car.h>coin.y){
-score+=20;
-scoreEl.innerText=score;
-coins.splice(i,1);
-}
-});
-
-/* LIMIT */
-if(car.x<left) car.x=left;
-if(car.x+car.w>right) car.x=right-car.w;
+aiDrive(); // AI only
+update();
+draw();
 
 requestAnimationFrame(loop);
 }
 
+// UI
+const scoreEl = document.getElementById("score");
+const livesEl = document.getElementById("lives");
+const speedEl = document.getElementById("speed");
+const final = document.getElementById("final");
+const gameOver = document.getElementById("gameOver");
+
 loop();
 
 </script>
+
 </body>
 </html>
