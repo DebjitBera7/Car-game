@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>Player Game</title>
+
 <style>
 body{margin:0;background:black;color:white;font-family:Arial;}
 #ui{position:absolute;top:20px;left:20px;}
@@ -93,31 +94,44 @@ y:-50
 }
 },1500);
 
-/* CONTROL */
+/* KEY CONTROL */
 onkeydown=e=>{
 if(e.key==="p"){
 paused=!paused;
 pauseMenu.style.display=paused?"block":"none";
 if(!paused) loop();
 }
+
 if(!paused){
 if(e.key==="ArrowLeft") car.x-=car.s;
 if(e.key==="ArrowRight") car.x+=car.s;
+if(e.key==="ArrowUp") car.y-=car.s;
+if(e.key==="ArrowDown") car.y+=car.s;
 }
 };
 
-/* MOBILE */
-let touchX=null;
-c.addEventListener("touchstart",e=>touchX=e.touches[0].clientX);
+/* MOBILE CONTROL */
+let touchX=null, touchY=null;
+
+c.addEventListener("touchstart",e=>{
+touchX=e.touches[0].clientX;
+touchY=e.touches[0].clientY;
+});
+
 c.addEventListener("touchmove",e=>{
 if(!paused){
 let x=e.touches[0].clientX;
+let y=e.touches[0].clientY;
+
 car.x += (x>touchX?car.s:-car.s);
+car.y += (y>touchY?car.s:-car.s);
+
 touchX=x;
+touchY=y;
 }
 });
 
-/* PAUSE */
+/* PAUSE BUTTON */
 pauseBtn.onclick=()=>{
 paused=true;
 pauseMenu.style.display="block";
@@ -155,7 +169,8 @@ score+=10;
 scoreEl.innerText=score;
 }
 
-if(car.x<o.x+o.w && car.x+car.w>o.x && car.y<o.y+o.h && car.y+car.h>o.y){
+if(car.x<o.x+o.w && car.x+car.w>o.x &&
+car.y<o.y+o.h && car.y+car.h>o.y){
 lives--;
 livesEl.innerText=lives;
 obs.splice(i,1);
@@ -185,6 +200,8 @@ coins.splice(i,1);
 /* LIMIT */
 if(car.x<left) car.x=left;
 if(car.x+car.w>right) car.x=right-car.w;
+if(car.y<0) car.y=0;
+if(car.y+car.h>c.height) car.y=c.height-car.h;
 
 requestAnimationFrame(loop);
 }
