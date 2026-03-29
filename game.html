@@ -1,34 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Car Game</title>
-
+<title>Player Game</title>
 <style>
-body{
-margin:0;
-overflow:hidden;
-background:black;
-color:white;
-font-family:Arial;
-}
-
-#ui{
-position:absolute;
-top:20px;
-left:20px;
-font-size:20px;
-}
-
-#gameOver{
-position:absolute;
-top:50%;
-left:50%;
+body{margin:0;background:black;color:white;font-family:Arial;}
+#ui{position:absolute;top:20px;left:20px;}
+#over,#pauseMenu{
+position:absolute;top:50%;left:50%;
 transform:translate(-50%,-50%);
-display:none;
-text-align:center;
+display:none;text-align:center;
+background:black;padding:30px;border-radius:10px;
 }
+button{padding:10px;margin:10px;}
+#pauseBtn{position:absolute;top:20px;right:20px;}
 </style>
-
 </head>
 
 <body>
@@ -36,203 +21,176 @@ text-align:center;
 <div id="ui">
 Score: <span id="score">0</span><br>
 Lives: <span id="lives">5</span><br>
-Speed: <span id="speed">5</span>
+Speed: <span id="speed">1</span>
 </div>
 
-<canvas id="canvas"></canvas>
+<button id="pauseBtn">⏸ Pause</button>
 
-<div id="gameOver">
+<div id="pauseMenu">
+<h1>PAUSED</h1>
+<button onclick="resumeGame()">Resume</button>
+<button onclick="location.href='index.html'">Exit</button>
+</div>
+
+<div id="over">
 <h1>GAME OVER</h1>
 <p>Score: <span id="final"></span></p>
 <button onclick="location.reload()">Restart</button>
 </div>
 
+<canvas id="c"></canvas>
+
 <script>
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const c=document.getElementById("c");
+const ctx=c.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+c.width=innerWidth;
+c.height=innerHeight;
 
-const roadLeft = canvas.width * 0.3;
-const roadRight = canvas.width * 0.7;
+let gameActive=true, paused=false;
 
-let score = 0;
-let lives = 5;
-let gameActive = true;
-let speed = 5;
+const left=c.width*0.2, right=c.width*0.8;
 
-// IMAGES
-const road = new Image(); road.src = "images/road.png";
-const playerImg = new Image(); playerImg.src = "images/player.png";
-const carImg = new Image(); carImg.src = "images/car.png";
-const truckImg = new Image(); truckImg.src = "images/truck.png";
-const coinImg = new Image(); coinImg.src = "images/coin.png";
+let score=0, lives=5;
+let speed=4, maxSpeed=15;
 
-// PLAYER
-const car = {
-x: canvas.width/2,
-y: canvas.height - 150,
-w:60,
-h:100,
-speed:6
-};
+let obs=[], coins=[];
 
-let obstacles = [];
-let coins = [];
+/* UI */
+const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
+const speedEl=document.getElementById("speed");
 
-// KEYBOARD
-const keys = {};
-window.addEventListener("keydown", e=> keys[e.key]=true);
-window.addEventListener("keyup", e=> keys[e.key]=false);
+/* IMAGES */
+const road=new Image(); road.src="images/road.png";
+const carImg=new Image(); carImg.src="images/car.png";
+const trafficImg=new Image(); trafficImg.src="images/player.png";
+const truckImg=new Image(); truckImg.src="images/truck.png";
+const coinImg=new Image(); coinImg.src="images/coin.png";
 
-// MOBILE
-let touchX = 0, touchY = 0;
+/* PLAYER */
+const car={x:(left+right)/2,y:c.height-120,w:60,h:100,s:7};
 
-canvas.addEventListener("touchstart", e=>{
-touchX = e.touches[0].clientX;
-touchY = e.touches[0].clientY;
+/* SPAWN TRAFFIC */
+setInterval(()=>{
+if(!paused && gameActive){
+obs.push({
+x:Math.random()*(right-left-60)+left,
+y:-100,w:60,h:100,
+img:Math.random()>0.5?trafficImg:truckImg
 });
-
-canvas.addEventListener("touchmove", e=>{
-let x = e.touches[0].clientX;
-let y = e.touches[0].clientY;
-
-if(x > touchX) car.x += car.speed;
-else car.x -= car.speed;
-
-if(y < touchY) car.y -= car.speed;
-else car.y += car.speed;
-
-touchX = x;
-touchY = y;
-});
-
-// CONTROL
-function control(){
-if(keys["ArrowLeft"]) car.x -= car.speed;
-if(keys["ArrowRight"]) car.x += car.speed;
-if(keys["ArrowUp"]) car.y -= car.speed;
-if(keys["ArrowDown"]) car.y += car.speed;
-
-// boundary
-if(car.x < roadLeft) car.x = roadLeft;
-if(car.x + car.w > roadRight) car.x = roadRight - car.w;
-if(car.y < 0) car.y = 0;
-if(car.y + car.h > canvas.height) car.y = canvas.height - car.h;
 }
+},800);
 
-// TRAFFIC
+/* SPAWN COIN */
 setInterval(()=>{
-obstacles.push({
-x: roadLeft + Math.random()*(roadRight-roadLeft-60),
-y:-100,
-w:60,
-h:100,
-img: Math.random()>0.5 ? carImg : truckImg
-});
-},700);
-
-// COIN
-setInterval(()=>{
+if(!paused && gameActive){
 coins.push({
-x: roadLeft + Math.random()*(roadRight-roadLeft-30),
+x:Math.random()*(right-left-30)+left,
 y:-50
 });
-},1200);
+}
+},1500);
 
-// SPEED INCREASE
-setInterval(()=>{
-speed += 0.3; // smooth increase
-speedEl.innerText = speed.toFixed(1);
-},1000);
+/* CONTROL */
+onkeydown=e=>{
+if(e.key==="p"){
+paused=!paused;
+pauseMenu.style.display=paused?"block":"none";
+if(!paused) loop();
+}
+if(!paused){
+if(e.key==="ArrowLeft") car.x-=car.s;
+if(e.key==="ArrowRight") car.x+=car.s;
+}
+};
 
-// UPDATE
-function update(){
+/* MOBILE */
+let touchX=null;
+c.addEventListener("touchstart",e=>touchX=e.touches[0].clientX);
+c.addEventListener("touchmove",e=>{
+if(!paused){
+let x=e.touches[0].clientX;
+car.x += (x>touchX?car.s:-car.s);
+touchX=x;
+}
+});
 
-// traffic
-obstacles.forEach((o,i)=>{
-o.y += speed;
+/* PAUSE */
+pauseBtn.onclick=()=>{
+paused=true;
+pauseMenu.style.display="block";
+};
 
-if(o.y > canvas.height){
-obstacles.splice(i,1);
-score += 10;
-scoreEl.innerText = score;
+function resumeGame(){
+paused=false;
+pauseMenu.style.display="none";
+loop();
 }
 
-if(
-car.x < o.x+o.w &&
-car.x+car.w > o.x &&
-car.y < o.y+o.h &&
-car.y+car.h > o.y
-){
-lives--;
-livesEl.innerText = lives;
-obstacles.splice(i,1);
+/* LOOP */
+function loop(){
 
-if(lives <= 0){
-gameActive = false;
-final.innerText = score;
-gameOver.style.display="block";
+if(!gameActive || paused) return;
+
+ctx.clearRect(0,0,c.width,c.height);
+ctx.drawImage(road,0,0,c.width,c.height);
+
+/* SPEED */
+if(speed<maxSpeed) speed+=0.002;
+speedEl.innerText=speed.toFixed(1);
+
+/* PLAYER */
+ctx.drawImage(carImg,car.x,car.y,car.w,car.h);
+
+/* TRAFFIC */
+obs.forEach((o,i)=>{
+o.y+=speed;
+ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
+
+if(o.y>c.height){
+obs.splice(i,1);
+score+=10;
+scoreEl.innerText=score;
+}
+
+if(car.x<o.x+o.w && car.x+car.w>o.x && car.y<o.y+o.h && car.y+car.h>o.y){
+lives--;
+livesEl.innerText=lives;
+obs.splice(i,1);
+
+if(lives<=0){
+gameActive=false;
+ctx.clearRect(0,0,c.width,c.height);
+final.innerText=score;
+over.style.display="block";
 }
 }
 });
 
-// coins
-coins.forEach((c,i)=>{
-c.y += speed;
+/* COINS */
+coins.forEach((coin,i)=>{
+coin.y+=speed;
+ctx.drawImage(coinImg,coin.x,coin.y,30,30);
 
-if(
-car.x < c.x+30 &&
-car.x+car.w > c.x &&
-car.y < c.y+30 &&
-car.y+car.h > c.y
-){
-score += 20;
-scoreEl.innerText = score;
+if(car.x<coin.x+30 && car.x+car.w>coin.x &&
+car.y<coin.y+30 && car.y+car.h>coin.y){
+score+=20;
+scoreEl.innerText=score;
 coins.splice(i,1);
 }
 });
-}
 
-// DRAW
-function draw(){
-ctx.drawImage(road,0,0,canvas.width,canvas.height);
-ctx.drawImage(playerImg,car.x,car.y,car.w,car.h);
-
-obstacles.forEach(o=>{
-ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
-});
-
-coins.forEach(c=>{
-ctx.drawImage(coinImg,c.x,c.y,30,30);
-});
-}
-
-// LOOP
-function loop(){
-if(!gameActive) return;
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-control();
-update();
-draw();
+/* LIMIT */
+if(car.x<left) car.x=left;
+if(car.x+car.w>right) car.x=right-car.w;
 
 requestAnimationFrame(loop);
 }
 
-// UI
-const scoreEl = document.getElementById("score");
-const livesEl = document.getElementById("lives");
-const speedEl = document.getElementById("speed");
-const final = document.getElementById("final");
-const gameOver = document.getElementById("gameOver");
-
 loop();
 
 </script>
-
 </body>
 </html>
