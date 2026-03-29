@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Player Car Game</title>
+<title>Car Game</title>
 
 <style>
 body{
@@ -27,11 +27,6 @@ transform:translate(-50%,-50%);
 display:none;
 text-align:center;
 }
-
-button{
-padding:10px 20px;
-font-size:18px;
-}
 </style>
 
 </head>
@@ -43,23 +38,22 @@ Score: <span id="score">0</span><br>
 Lives: <span id="lives">5</span>
 </div>
 
-<canvas id="gameCanvas"></canvas>
+<canvas id="canvas"></canvas>
 
 <div id="gameOver">
 <h1>GAME OVER</h1>
-<p>Score: <span id="finalScore"></span></p>
-<button onclick="restartGame()">Restart</button>
+<p>Score: <span id="final"></span></p>
+<button onclick="location.reload()">Restart</button>
 </div>
 
 <script>
 
-const canvas = document.getElementById("gameCanvas");
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// ROAD LIMIT
 const roadLeft = canvas.width * 0.3;
 const roadRight = canvas.width * 0.7;
 
@@ -67,139 +61,129 @@ let score = 0;
 let lives = 5;
 let gameActive = true;
 
-// PLAYER CAR
+// IMAGES
+const road = new Image();
+road.src = "images/road.png";
+
+const playerImg = new Image();
+playerImg.src = "images/player.png";
+
+const carImg = new Image();
+carImg.src = "images/car.png";
+
+const truckImg = new Image();
+truckImg.src = "images/truck.png";
+
+// PLAYER
 const car = {
 x: canvas.width/2,
-y: canvas.height-120,
-width:40,
-height:60,
+y: canvas.height-150,
+w:60,
+h:100,
 speed:6
 };
 
 let obstacles = [];
 
-// CONTROLS
+// CONTROL
 const keys = {};
 
-window.addEventListener("keydown", e=>{
-keys[e.key] = true;
-});
+window.addEventListener("keydown", e=>keys[e.key]=true);
+window.addEventListener("keyup", e=>keys[e.key]=false);
 
-window.addEventListener("keyup", e=>{
-keys[e.key] = false;
-});
-
-// PLAYER CONTROL
-function playerControl(){
+function control(){
 
 if(keys["ArrowLeft"]) car.x -= car.speed;
 if(keys["ArrowRight"]) car.x += car.speed;
 if(keys["ArrowUp"]) car.y -= car.speed;
 if(keys["ArrowDown"]) car.y += car.speed;
 
-// ROAD BOUNDARY
+// boundary
 if(car.x < roadLeft) car.x = roadLeft;
-if(car.x + car.width > roadRight)
-car.x = roadRight - car.width;
+if(car.x + car.w > roadRight) car.x = roadRight - car.w;
 
-// SCREEN BOUNDARY
 if(car.y < 0) car.y = 0;
-if(car.y + car.height > canvas.height)
-car.y = canvas.height - car.height;
+if(car.y + car.h > canvas.height) car.y = canvas.height - car.h;
+
 }
 
-// SPAWN TRAFFIC
-function spawnObstacle(){
+// SPAWN
+function spawn(){
 obstacles.push({
-x: roadLeft + Math.random()*(roadRight-roadLeft-40),
-y:-50,
-width:40,
-height:60
+x: roadLeft + Math.random()*(roadRight-roadLeft-60),
+y:-100,
+w:60,
+h:100,
+img: Math.random()>0.5 ? carImg : truckImg
 });
 }
 
-setInterval(spawnObstacle,800);
+setInterval(spawn,800);
 
-// UPDATE OBSTACLES
-function updateObstacles(){
-obstacles.forEach((obs,index)=>{
-obs.y += 6;
+// UPDATE
+function update(){
+obstacles.forEach((o,i)=>{
+o.y += 6;
 
-if(obs.y > canvas.height){
-obstacles.splice(index,1);
+if(o.y > canvas.height){
+obstacles.splice(i,1);
 score += 10;
-document.getElementById("score").innerText = score;
-}
-});
+scoreEl.innerText = score;
 }
 
-// DRAW ROAD
-function drawRoad(){
-ctx.fillStyle = "#222";
-ctx.fillRect(roadLeft,0,roadRight-roadLeft,canvas.height);
-}
-
-// DRAW CAR
-function drawCar(){
-ctx.fillStyle="red";
-ctx.fillRect(car.x,car.y,car.width,car.height);
-}
-
-// DRAW TRAFFIC
-function drawObstacles(){
-ctx.fillStyle="yellow";
-obstacles.forEach(obs=>{
-ctx.fillRect(obs.x,obs.y,obs.width,obs.height);
-});
-}
-
-// COLLISION
-function checkCollision(){
-obstacles.forEach((obs,index)=>{
+// collision
 if(
-car.x < obs.x + obs.width &&
-car.x + car.width > obs.x &&
-car.y < obs.y + obs.height &&
-car.y + car.height > obs.y
+car.x < o.x+o.w &&
+car.x+car.w > o.x &&
+car.y < o.y+o.h &&
+car.y+car.h > o.y
 ){
 lives--;
-document.getElementById("lives").innerText = lives;
-
-obstacles.splice(index,1);
+livesEl.innerText = lives;
+obstacles.splice(i,1);
 
 if(lives <= 0){
 gameActive = false;
-document.getElementById("finalScore").innerText = score;
-document.getElementById("gameOver").style.display = "block";
+final.innerText = score;
+gameOver.style.display="block";
 }
 }
+
 });
 }
 
-// GAME LOOP
-function gameLoop(){
+// DRAW
+function draw(){
+
+ctx.drawImage(road,0,0,canvas.width,canvas.height);
+
+ctx.drawImage(playerImg,car.x,car.y,car.w,car.h);
+
+obstacles.forEach(o=>{
+ctx.drawImage(o.img,o.x,o.y,o.w,o.h);
+});
+}
+
+// LOOP
+function loop(){
 
 if(!gameActive) return;
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-drawRoad();
-playerControl();
-updateObstacles();
-checkCollision();
+control();
+update();
+draw();
 
-drawCar();
-drawObstacles();
-
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(loop);
 }
 
-gameLoop();
+const scoreEl = document.getElementById("score");
+const livesEl = document.getElementById("lives");
+const final = document.getElementById("final");
+const gameOver = document.getElementById("gameOver");
 
-// RESTART
-function restartGame(){
-location.reload();
-}
+loop();
 
 </script>
 
