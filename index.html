@@ -18,9 +18,10 @@ justify-content:center;
 align-items:center;
 background:black;
 color:white;
+overflow:hidden;
 }
 
-/* GLOW BACKGROUND */
+/* BACKGROUND */
 body::before{
 content:"";
 position:absolute;
@@ -37,10 +38,10 @@ animation:moveBg 8s linear infinite;
 
 .container{
 position:relative;
-text-align:center;
 z-index:2;
+text-align:center;
 width:90%;
-max-width:400px;
+max-width:450px;
 }
 
 /* TITLE */
@@ -53,9 +54,10 @@ text-shadow:0 0 15px #00f7ff;
 
 /* CARD */
 .card{
-padding:35px;
+padding:30px;
+margin:20px 0;
 border-radius:20px;
-background:rgba(0,0,0,0.75);
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
 border:2px solid #00f7ff;
 box-shadow:0 0 30px #00f7ff;
 }
@@ -64,7 +66,7 @@ box-shadow:0 0 30px #00f7ff;
 .badge{
 display:inline-block;
 padding:6px 14px;
-margin-bottom:20px;
+margin-bottom:15px;
 border-radius:12px;
 background:#00f7ff;
 color:black;
@@ -74,7 +76,6 @@ font-weight:bold;
 /* BUTTON */
 button{
 width:100%;
-margin:12px 0;
 padding:15px;
 font-size:18px;
 border:none;
@@ -83,24 +84,32 @@ cursor:pointer;
 font-weight:bold;
 }
 
-/* BUTTON STYLES */
+/* AI BUTTON */
 .ai-btn{
 background:#00f7ff;
 color:black;
 box-shadow:0 0 15px #00f7ff;
 }
 
+/* PLAY BUTTON */
 .play-btn{
 background:white;
 color:black;
 }
 
+/* HOVER */
 button:hover{
 transform:scale(1.05);
 }
 
-</style>
+/* TEXT */
+.label{
+margin-top:10px;
+font-size:16px;
+color:#ddd;
+}
 
+</style>
 </head>
 
 <body>
@@ -109,18 +118,22 @@ transform:scale(1.05);
 
 <h1>🚗 AI Highway Game</h1>
 
+<!-- AI MODE -->
 <div class="card">
-
 <div class="badge">🤖 AI MODE</div>
 
 <button class="ai-btn" onclick="location.href='game2.html'">
 👁 Watch Tutorial
 </button>
 
+<div class="label">AI controls the car automatically</div>
+</div>
+
+<!-- PLAY GAME -->
+<div class="card">
 <button class="play-btn" onclick="location.href='game.html'">
 🎮 Play Game
 </button>
-
 </div>
 
 </div>
